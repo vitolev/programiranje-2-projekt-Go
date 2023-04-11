@@ -2,9 +2,8 @@ package logika;
 
 public class Igra {
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 
-	}
+	// Velikost igralne pološče je N x N.
+	public static final int N = 9;
 
 }
