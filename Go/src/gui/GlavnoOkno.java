@@ -13,6 +13,9 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
+import logika.Igralec;
+import logika.VrstaIgralca;
+
 @SuppressWarnings("serial")
 public class GlavnoOkno extends JFrame implements ActionListener{
 
