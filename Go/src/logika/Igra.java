@@ -36,7 +36,7 @@ public class Igra {
 	
 	// Return trenutno stanje igre. Trenutno je to copy-paste iz TicTacToe. Treba implementirat pravila Go.
 	public Stanje stanje() {
-		// Ali imamo zmagovalca?
+		// Ali imamo zmagovalca? Treba implementirat kdaj kdo zmaga.
 		/*
 		Vrsta t = zmagovalnaVrsta();
 		if (t != null) {
