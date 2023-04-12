@@ -1,4 +1,4 @@
-package vodja;
+package logika;
 
 public enum VrstaIgralca {
 	R, C; 

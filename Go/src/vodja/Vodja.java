@@ -10,9 +10,9 @@ import java.util.concurrent.TimeUnit;
 import gui.GlavnoOkno;
 import logika.Igra;
 import logika.Igralec;
-import logika.Koordinati;
-
-import inteligenca.Inteligenca
+import logika.VrstaIgralca;
+import splosno.Poteza;
+import inteligenca.Inteligenca;
 
 public class Vodja {	
 	
@@ -23,9 +23,12 @@ public class Vodja {
 	public static Igra igra = null;
 	
 	public static boolean clovekNaVrsti = false;
+	
+	public static Inteligenca inteligenca;
 		
 	public static void igramoNovoIgro () {
 		igra = new Igra ();
+		inteligenca = new Inteligenca();	// Ustvarimo novo instanco razreda Inteligenca
 		igramo ();
 	}
 	
@@ -52,12 +55,12 @@ public class Vodja {
 	
 	public static void igrajRacunalnikovoPotezo() {
 		// Tukaj je že preverjeno, da je potezo možno narediti, saj bova to implementirala pri NEODLOCENO
-		Poteza poteza = inteligenca.izberiPotezo(igra) // Okej če kaj ne dela samo preveri, da se lahko na igro tako sklicujem
+		Poteza poteza = inteligenca.izberiPotezo(igra); // Okej če kaj ne dela samo preveri, da se lahko na igro tako sklicujem
 		igra.odigraj(poteza);
 		igramo ();
 	}
 		
-	public static void igrajClovekovoPotezo(Koordinati poteza) {
+	public static void igrajClovekovoPotezo(Poteza poteza) {
 		if (igra.odigraj(poteza)) {
 			clovekNaVrsti = false;
 			igramo ();

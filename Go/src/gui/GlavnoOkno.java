@@ -15,6 +15,7 @@ import javax.swing.JMenuItem;
 
 import logika.Igralec;
 import logika.VrstaIgralca;
+import vodja.Vodja;
 
 @SuppressWarnings("serial")
 public class GlavnoOkno extends JFrame implements ActionListener{
@@ -125,11 +126,11 @@ public class GlavnoOkno extends JFrame implements ActionListener{
 						" - " + Vodja.vrstaIgralca.get(Vodja.igra.naPotezi())); 
 				break;
 			case ZMAGA_BELI: 
-				status.setText("Zmagal je O - " + 
+				status.setText("Zmagal je Beli - " + 
 						Vodja.vrstaIgralca.get(Igralec.BELI));
 				break;
 			case ZMAGA_CRNI: 
-				status.setText("Zmagal je X - " + 
+				status.setText("Zmagal je Črni - " + 
 						Vodja.vrstaIgralca.get(Igralec.CRNI));
 				break;
 			}
