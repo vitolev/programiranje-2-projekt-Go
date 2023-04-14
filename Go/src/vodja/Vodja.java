@@ -36,6 +36,7 @@ public class Vodja {
 	}
 	
 	public static void igramo () {
+		// okno potrebuje stanje pri funkciji osvezuGUI zato je treba najprej posodobiti stanje in nato klicati osveziGUI()
 		switch (igra.stanje()) {
 		case ZMAGA_BELI: 
 			stanje = Stanje.ZMAGA_BELI;
@@ -78,7 +79,8 @@ public class Vodja {
 			igramo ();
 		}
 	}
-
+	
+	// Return stanje igre
 	public static Stanje stanjeIgre() {
 		return stanje;
 	}
