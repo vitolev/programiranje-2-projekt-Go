@@ -93,13 +93,13 @@ public class GlavnoOkno extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == igraClovekRacunalnik) {
 			Vodja.vrstaIgralca = new EnumMap<Igralec,VrstaIgralca>(Igralec.class);
-			Vodja.vrstaIgralca.put(Igralec.BELI, VrstaIgralca.C); 
-			Vodja.vrstaIgralca.put(Igralec.CRNI, VrstaIgralca.R);
+			Vodja.vrstaIgralca.put(Igralec.BELI, VrstaIgralca.R); 
+			Vodja.vrstaIgralca.put(Igralec.CRNI, VrstaIgralca.C);
 			Vodja.igramoNovoIgro();
 		} else if (e.getSource() == igraRacunalnikClovek) {
 			Vodja.vrstaIgralca = new EnumMap<Igralec,VrstaIgralca>(Igralec.class);
-			Vodja.vrstaIgralca.put(Igralec.BELI, VrstaIgralca.R); 
-			Vodja.vrstaIgralca.put(Igralec.CRNI, VrstaIgralca.C);
+			Vodja.vrstaIgralca.put(Igralec.BELI, VrstaIgralca.C); 
+			Vodja.vrstaIgralca.put(Igralec.CRNI, VrstaIgralca.R);
 			Vodja.igramoNovoIgro();
 		} else if (e.getSource() == igraClovekClovek) {
 			Vodja.vrstaIgralca = new EnumMap<Igralec,VrstaIgralca>(Igralec.class);
@@ -119,7 +119,7 @@ public class GlavnoOkno extends JFrame implements ActionListener{
 			status.setText("Igra ni v teku.");
 		}
 		else {
-			switch(Vodja.igra.stanje()) {
+			switch(Vodja.stanjeIgre()) {
 			case NEODLOCENO: status.setText("Neodločeno!"); break;
 			case V_TEKU: 
 				status.setText("Na potezi je " + Vodja.igra.naPotezi() + 

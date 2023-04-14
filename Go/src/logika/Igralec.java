@@ -1,18 +1,21 @@
 package logika;
 
 /**
- * Možni igralci.
+ *  Mozna sta le 2 tipa igralca. Crni ali pa beli
  */
 
 public enum Igralec {
 	CRNI, BELI;
-
+	
+	// Return nasprotni tip igralca
 	public Igralec nasprotnik() {
 		return (this == CRNI ? BELI : CRNI);
 	}
 	
+	// Tip (barva) polja na katerem je figura igralca ustreza tipu (barvi) igralca.
+	// Return tip (barvo) polja glede na igralca.
 	public Polje getPolje() {
-		return (this == CRNI ? Polje.CRNI : Polje.BELI);
+		return (this == CRNI ? Polje.CRNO : Polje.BELO);
 	}
 	
 	

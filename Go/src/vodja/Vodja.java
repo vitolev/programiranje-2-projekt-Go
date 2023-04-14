@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import gui.GlavnoOkno;
 import logika.Igra;
 import logika.Igralec;
+import logika.Stanje;
 import logika.VrstaIgralca;
 import splosno.Poteza;
 import inteligenca.Inteligenca;
@@ -25,6 +26,8 @@ public class Vodja {
 	public static boolean clovekNaVrsti = false;
 	
 	public static Inteligenca inteligenca;
+	
+	private static Stanje stanje;
 		
 	public static void igramoNovoIgro () {
 		igra = new Igra ();
@@ -33,13 +36,22 @@ public class Vodja {
 	}
 	
 	public static void igramo () {
-		okno.osveziGUI();
 		switch (igra.stanje()) {
 		case ZMAGA_BELI: 
+			stanje = Stanje.ZMAGA_BELI;
+			okno.osveziGUI();
+			return;
 		case ZMAGA_CRNI: 
-		case NEODLOCENO: 
+			stanje = Stanje.ZMAGA_CRNI;
+			okno.osveziGUI();
+			return;
+		case NEODLOCENO:
+			stanje = Stanje.NEODLOCENO;
+			okno.osveziGUI();
 			return;
 		case V_TEKU: 
+			stanje = Stanje.V_TEKU;
+			okno.osveziGUI();
 			Igralec igralec = igra.naPotezi();
 			VrstaIgralca vrstaNaPotezi = vrstaIgralca.get(igralec);
 			switch (vrstaNaPotezi) {
@@ -67,5 +79,7 @@ public class Vodja {
 		}
 	}
 
-
+	public static Stanje stanjeIgre() {
+		return stanje;
+	}
 }

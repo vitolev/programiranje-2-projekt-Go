@@ -52,7 +52,7 @@ public class IgralnoPolje extends JPanel implements MouseListener {
 		double y = w * (j + 0.5 * LINE_WIDTH + PADDING);
 		g2.setColor(Color.WHITE);
 		g2.setStroke(new BasicStroke((float) (w * LINE_WIDTH)));
-		g2.drawOval((int)x, (int)y, (int)d , (int)d);
+		g2.fillOval((int)x, (int)y, (int)d , (int)d);
 	}
 	
 	// Narisi crn krogec
@@ -63,7 +63,7 @@ public class IgralnoPolje extends JPanel implements MouseListener {
 		double y = w * (j + 0.5 * LINE_WIDTH + PADDING);
 		g2.setColor(Color.BLACK);
 		g2.setStroke(new BasicStroke((float) (w * LINE_WIDTH)));
-		g2.drawOval((int)x, (int)y, (int)d , (int)d);
+		g2.fillOval((int)x, (int)y, (int)d , (int)d);
 	}
 	
 	@Override
@@ -76,15 +76,15 @@ public class IgralnoPolje extends JPanel implements MouseListener {
 		// črte
 		g2.setColor(Color.BLACK);
 		g2.setStroke(new BasicStroke((float) (w * LINE_WIDTH)));
-		for (int i = 1; i < Igra.N; i++) {
-			g2.drawLine((int)(i * w),
-					    (int)(0),
-					    (int)(i * w),
-					    (int)(Igra.N * w));
-			g2.drawLine((int)(0),
-					    (int)(i * w),
-					    (int)(Igra.N * w),
-					    (int)(i * w));
+		for (int i = 0; i < Igra.N; i++) {
+			g2.drawLine((int)(i * w + w / 2),
+					    (int)(w / 2),
+					    (int)(i * w + w / 2),
+					    (int)(Igra.N * w - w / 2));
+			g2.drawLine((int)(w / 2),
+					    (int)(i * w + w / 2),
+					    (int)(Igra.N * w - w / 2),
+					    (int)(i * w + w / 2));
 		}
 		
 		// Pobarvamo mrežo z belimi in crnimi krogci
@@ -94,8 +94,8 @@ public class IgralnoPolje extends JPanel implements MouseListener {
 			for (int i = 0; i < Igra.N; i++) {
 				for (int j = 0; j < Igra.N; j++) {
 					switch(plosca[i][j]) {
-					case CRNI: paintCrni(g2, i, j); break;
-					case BELI: paintBeli(g2, i, j); break;
+					case CRNO: paintCrni(g2, i, j); break;
+					case BELO: paintBeli(g2, i, j); break;
 					default: break;
 					}
 				}
@@ -105,7 +105,7 @@ public class IgralnoPolje extends JPanel implements MouseListener {
 		
 	}
 
-	
+	// Malo popravi to funkcijo, da bo bolje odločala, če je player klikno križišče ali ne.
 	@Override
 	public void mouseClicked(MouseEvent e) {
 		if (Vodja.clovekNaVrsti) {

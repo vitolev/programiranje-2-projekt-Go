@@ -1,5 +1,8 @@
 package logika;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import splosno.Poteza;
 
 public class Igra {
@@ -11,8 +14,16 @@ public class Igra {
 	// Vrednost je poljubna, če je igre konec (se pravi, lahko je napačna).
 	private Igralec naPotezi;
 
-	// Igralno polje
+	// Igralna plošča
 	private Polje[][] plosca;
+	
+	// Grupe (skupki povezanih figur) posameznega igralca
+	private Set<Grupa> grupeBelega;
+	private Set<Grupa> grupeCrnega;
+	
+	// Mnozici vseh belih in crnih tock
+	private Set<Tocka> vseBeleTocke;
+	private Set<Tocka> vseCrneTocke;
 	
 	// Return naPotezi
 	public Igralec naPotezi () {
@@ -25,47 +36,136 @@ public class Igra {
 	
 	// KONSTRUKTOR
 	public Igra() {
-		plosca = new Polje[N][N];
+		plosca = new Polje[N][N];	// Ustvari novo prazno igralno ploščo
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
-				plosca[i][j] = Polje.PRAZNO;
+				plosca[i][j] = Polje.PRAZNO;	// Na začetku je celotna plošča prazna, zato nastavimo vsako polje na tip prazno.
 			}
 		}
-		naPotezi = Igralec.CRNI;
+		grupeBelega = new HashSet<Grupa>(); // Ustvarimo prazni mnozici grup za oba igralca.
+		grupeCrnega = new HashSet<Grupa>(); //
+		
+		vseBeleTocke = new HashSet<Tocka>();
+		vseCrneTocke = new HashSet<Tocka>();
+		
+		naPotezi = Igralec.CRNI;	// Po pravilih začne črni igralec.
 	}
 	
-	// Return trenutno stanje igre. Trenutno je to copy-paste iz TicTacToe. Treba implementirat pravila Go.
+	// Return trenutno stanje igre.
 	public Stanje stanje() {
-		// Ali imamo zmagovalca? Treba implementirat kdaj kdo zmaga.
-		/*
-		Vrsta t = zmagovalnaVrsta();
-		if (t != null) {
-			switch (plosca[t.x[0]][t.y[0]]) {
-			case BELI: return Stanje.ZMAGA_BELI; 
-			case CRNI: return Stanje.ZMAGA_CRNI;
-			case PRAZNO: assert false;
-			}
+		// Preverimo, če je kdo zmagal. Trenutno to ne dela najbolje za "suicide move".
+		if(ZmagovalecCRNI()) {
+			return Stanje.ZMAGA_CRNI;
 		}
-		*/
-		// Ali imamo kakšno prazno polje?
+		if(ZmagovalecBELI()) {
+			return Stanje.ZMAGA_BELI;
+		}
+		
+		// Preverimo, če je katero polje še prazno.
 		// Če ga imamo, igre ni konec in je nekdo na potezi
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
 				if (plosca[i][j] == Polje.PRAZNO) return Stanje.V_TEKU;
 			}
 		}
-		// Polje je polno, rezultat je neodločen
-		return Stanje.NEODLOCENO;
+		// Polje je polno, po pravilih Capture Go to pomeni, da je zmagal beli. 
+		return Stanje.ZMAGA_BELI;
+	}
+	
+	private boolean ZmagovalecCRNI() {
+		// Ker imamo sistem implementiran tako, da v vsakem "krogu" najprej pogledamo stanje nato odigramo potezo, moramo sedaj pogledati
+		// če je igralec iz prejšnjega "kroga" zmagal. Zato klicemo vedno naPotezi.nasprotnik()
+		if(naPotezi.nasprotnik() == Igralec.CRNI) {
+			for(Grupa belaGrupa : grupeBelega) {
+				boolean jeTaGrupaObkrozena = true;
+				for(Tocka sosednjaTocka : belaGrupa.sosednjeTocke) {
+					if(!vseCrneTocke.contains(sosednjaTocka)) {
+						jeTaGrupaObkrozena = false;
+					}
+				}
+				if(jeTaGrupaObkrozena) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	private boolean ZmagovalecBELI() {
+		// Ista finta kot pri ZmagovalecCRNI()
+		if(naPotezi.nasprotnik() == Igralec.BELI) {
+			for(Grupa crnaGrupa : grupeCrnega) {
+				boolean jeTaGrupaObkrozena = true;
+				for(Tocka sosednjaTocka : crnaGrupa.sosednjeTocke) {
+					if(!vseBeleTocke.contains(sosednjaTocka)) {
+						jeTaGrupaObkrozena = false;
+					}
+				}
+				if(jeTaGrupaObkrozena) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 	public boolean odigraj(Poteza poteza) {
 		if (plosca[poteza.x()][poteza.y()] == Polje.PRAZNO) {
 			plosca[poteza.x()][poteza.y()] = naPotezi.getPolje();
-			naPotezi = naPotezi.nasprotnik();
+			
+			// Ustvarimo novo tocko, ki ustreza odigrani potezi.
+			// To tocko dodamo ustrezni grupi ustreznemu igralcu. Če take grupe še ni, ustvari novo grupo.
+			Tocka izbranaTocka = new Tocka(poteza.x(), poteza.y());	
+			if(naPotezi == Igralec.CRNI) {
+				boolean dodalTockoObstojeciGrupi = false;
+				for(Grupa grupa : grupeCrnega) {
+					if(grupa.vsebujeSosednjoTocko(izbranaTocka)) {
+						grupa.dodajTocko(izbranaTocka);
+						dodalTockoObstojeciGrupi = true;
+						break; // lahko skocimo ven iz zanke, ker smo tocko ze dodali vsaj eni grupi
+					}
+				}
+				if(!dodalTockoObstojeciGrupi) {
+					Grupa novaGrupa = new Grupa();
+					novaGrupa.dodajTocko(izbranaTocka);
+					grupeCrnega.add(novaGrupa);
+				}
+				vseCrneTocke.add(izbranaTocka);
+			}
+			else {
+				// naPotezi = Igralec.BELI
+				boolean dodalTockoObstojeciGrupi = false;
+				for(Grupa grupa : grupeBelega) {
+					if(grupa.vsebujeSosednjoTocko(izbranaTocka)) {
+						grupa.dodajTocko(izbranaTocka);
+						dodalTockoObstojeciGrupi = true;
+						break; // lahko skocimo ven iz zanke, ker smo tocko ze dodali vsaj eni grupi
+					}
+				}
+				if(!dodalTockoObstojeciGrupi) {
+					Grupa novaGrupa = new Grupa();
+					novaGrupa.dodajTocko(izbranaTocka);
+					grupeBelega.add(novaGrupa);
+				}
+				vseBeleTocke.add(izbranaTocka);
+			}
+			
+			ZdruziStikajoceGrupe();
+			naPotezi = naPotezi.nasprotnik(); 
 			return true;
 		}
 		else {
 			return false;
+		}
+	}
+	
+	// Nekatere grupe istega igralca (iste barve) se morda stikajo. Združimo te grupe v eno
+	private void ZdruziStikajoceGrupe() {
+		if(naPotezi == Igralec.CRNI) {
+			
+		}
+		else {
+			
 		}
 	}
 }

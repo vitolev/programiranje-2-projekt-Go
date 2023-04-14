@@ -1,9 +1,9 @@
 package logika;
 
 /**
- * Možne vrednosti polj na plošči.
+ * Možni tipi polj na igralni plošči.
  */
 
 public enum Polje {
-	BELI, CRNI, PRAZNO
+	BELO, CRNO, PRAZNO
 }
