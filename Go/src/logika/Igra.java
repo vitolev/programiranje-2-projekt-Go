@@ -53,12 +53,25 @@ public class Igra {
 	
 	// Return trenutno stanje igre.
 	public Stanje stanje() {
-		// Preverimo, če je kdo zmagal. Trenutno to ne dela najbolje za "suicide move".
-		if(ZmagovalecCRNI()) {
-			return Stanje.ZMAGA_CRNI;
+		// Preverimo, če je kdo zmagal. Ker je funkcija stanje() poklicana preden je izvedena naslednja poteza,
+		// je potrebno pogledat ali je igralec iz prejšnje poteze zmagal, zato gledamo naPotezi.nasprotnik().
+		if(naPotezi.nasprotnik() == Igralec.CRNI) {
+			if(ZmagovalecCRNI()) {
+				return Stanje.ZMAGA_CRNI;
+			}
+			// Preveri suicide move
+			if(ZmagovalecBELI()) {
+				return Stanje.ZMAGA_BELI;
+			}
 		}
-		if(ZmagovalecBELI()) {
-			return Stanje.ZMAGA_BELI;
+		else { // naPotezi.nasprotnik() = Igralec.BELI
+			if(ZmagovalecBELI()) {
+				return Stanje.ZMAGA_BELI;
+			}
+			// Preveri suicide move
+			if(ZmagovalecCRNI()) {
+				return Stanje.ZMAGA_CRNI;
+			}
 		}
 		
 		// Preverimo, če je katero polje še prazno.
@@ -73,37 +86,30 @@ public class Igra {
 	}
 	
 	private boolean ZmagovalecCRNI() {
-		// Ker imamo sistem implementiran tako, da v vsakem "krogu" najprej pogledamo stanje nato odigramo potezo, moramo sedaj pogledati
-		// če je igralec iz prejšnjega "kroga" zmagal. Zato klicemo vedno naPotezi.nasprotnik()
-		if(naPotezi.nasprotnik() == Igralec.CRNI) {
-			for(Grupa belaGrupa : grupeBelega) {
-				boolean jeTaGrupaObkrozena = true;
-				for(Tocka sosednjaTocka : belaGrupa.sosednjeTocke) {
-					if(!vseCrneTocke.contains(sosednjaTocka)) {
-						jeTaGrupaObkrozena = false;
-					}
+		for(Grupa belaGrupa : grupeBelega) {
+			boolean jeTaGrupaObkrozena = true;
+			for(Tocka sosednjaTocka : belaGrupa.sosednjeTocke) {
+				if(!vseCrneTocke.contains(sosednjaTocka)) {
+					jeTaGrupaObkrozena = false;
 				}
-				if(jeTaGrupaObkrozena) {
-					return true;
-				}
+			}
+			if(jeTaGrupaObkrozena) {
+				return true;
 			}
 		}
 		return false;
 	}
 	
 	private boolean ZmagovalecBELI() {
-		// Ista finta kot pri ZmagovalecCRNI()
-		if(naPotezi.nasprotnik() == Igralec.BELI) {
-			for(Grupa crnaGrupa : grupeCrnega) {
-				boolean jeTaGrupaObkrozena = true;
-				for(Tocka sosednjaTocka : crnaGrupa.sosednjeTocke) {
-					if(!vseBeleTocke.contains(sosednjaTocka)) {
-						jeTaGrupaObkrozena = false;
-					}
+		for(Grupa crnaGrupa : grupeCrnega) {
+			boolean jeTaGrupaObkrozena = true;
+			for(Tocka sosednjaTocka : crnaGrupa.sosednjeTocke) {
+				if(!vseBeleTocke.contains(sosednjaTocka)) {
+					jeTaGrupaObkrozena = false;
 				}
-				if(jeTaGrupaObkrozena) {
-					return true;
-				}
+			}
+			if(jeTaGrupaObkrozena) {
+				return true;
 			}
 		}
 		return false;
