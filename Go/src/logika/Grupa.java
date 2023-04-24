@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class Grupa {
 	
-	private Set<Tocka> povezaneTocke;
+	public Set<Tocka> povezaneTocke;
 	public Set<Tocka> sosednjeTocke;
 	
 	public Grupa() {
@@ -34,7 +34,7 @@ public class Grupa {
 	}
 	
 	// Funkcija preveri ali je podana tocka ze vsebovana v tej grupi v množici povezanih točk
-	private boolean vsebujePovezanoTocko(Tocka tocka) {
+	public boolean vsebujePovezanoTocko(Tocka tocka) {
 		return povezaneTocke.contains(tocka);
 	}
 	
@@ -43,7 +43,7 @@ public class Grupa {
 		return sosednjeTocke.contains(tocka);
 	}
 	
-	// Za vizualno reprezentacijo objekta v konzoli
+	// Za vizualno reprezentacijo objekta v konzoli. Lahko se izboljsa
 	@Override
 	public String toString() {
 		System.out.println("Povezane tocke:");

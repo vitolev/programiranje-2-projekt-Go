@@ -137,6 +137,7 @@ public class Igra {
 					grupeCrnega.add(novaGrupa);
 				}
 				vseCrneTocke.add(izbranaTocka);
+				ZdruziStikajoceCrneGrupe(izbranaTocka);
 			}
 			else {
 				// naPotezi = Igralec.BELI
@@ -154,9 +155,8 @@ public class Igra {
 					grupeBelega.add(novaGrupa);
 				}
 				vseBeleTocke.add(izbranaTocka);
+				ZdruziStikajoceBeleGrupe(izbranaTocka);
 			}
-			
-			ZdruziStikajoceGrupe();
 			naPotezi = naPotezi.nasprotnik(); 
 			return true;
 		}
@@ -166,12 +166,68 @@ public class Igra {
 	}
 	
 	// Nekatere grupe istega igralca (iste barve) se morda stikajo. Združimo te grupe v eno
-	private void ZdruziStikajoceGrupe() {
-		if(naPotezi == Igralec.CRNI) {
-			
+	private void ZdruziStikajoceBeleGrupe(Tocka tocka) {
+		Grupa grupa1 = null; // Grupa, ki vsebuje izbrano tocko. Takšna grupa zagoto mora obstajati, ker tocka pripada eni grupi.
+		Grupa grupa2 = null; // Grupa, ki med sosednjimi točkami vsebuje izbrano tocko. Takšna grupa ni nujno da obstaja.
+					  		 // V primeru, da ne obstaja, to pomeni, da ne rabimo zdruziti ničesar.
+					  		 // Če pa obstaja pa moramo zdruziti ti dve grupi.
+		for(Grupa grupa : grupeBelega) {
+			if(grupa.vsebujePovezanoTocko(tocka)) {
+				grupa1 = grupa;
+			}
+			if(grupa.vsebujeSosednjoTocko(tocka)) {
+				grupa2 = grupa;
+			}
 		}
-		else {
+		
+		if(grupa2 != null) {
+			Grupa zdruzenaGrupa = new Grupa();
+			for(Tocka tocka_ : grupa1.povezaneTocke) {
+				zdruzenaGrupa.dodajTocko(tocka_);
+			}
+			for(Tocka tocka_ : grupa2.povezaneTocke) {
+				zdruzenaGrupa.dodajTocko(tocka_);
+			}
 			
+			grupeBelega.remove(grupa1);
+			grupeBelega.remove(grupa2);
+			grupeBelega.add(zdruzenaGrupa);
+			
+			ZdruziStikajoceBeleGrupe(tocka);
+		}
+	}
+	
+	private void ZdruziStikajoceCrneGrupe(Tocka tocka) {
+		Grupa grupa1 = null; // Grupa, ki vsebuje izbrano tocko. Takšna grupa zagoto mora obstajati, ker tocka pripada eni grupi.
+		Grupa grupa2 = null; // Grupa, ki med sosednjimi točkami vsebuje izbrano tocko. Takšna grupa ni nujno da obstaja.
+					  		 // V primeru, da ne obstaja, to pomeni, da ne rabimo zdruziti ničesar.
+					  		 // Če pa obstaja pa moramo zdruziti ti dve grupi.
+		for(Grupa grupa : grupeCrnega) {
+			if(grupa.vsebujePovezanoTocko(tocka)) {
+				grupa1 = grupa;
+			}
+			if(grupa.vsebujeSosednjoTocko(tocka)) {
+				grupa2 = grupa;
+			}
+		}
+		
+		if(grupa2 != null) {
+			Grupa zdruzenaGrupa = new Grupa();
+			for(Tocka tocka_ : grupa1.povezaneTocke) {
+				zdruzenaGrupa.dodajTocko(tocka_);
+			}
+			for(Tocka tocka_ : grupa2.povezaneTocke) {
+				zdruzenaGrupa.dodajTocko(tocka_);
+			}
+			
+			grupeCrnega.remove(grupa1);
+			grupeCrnega.remove(grupa2);
+			grupeCrnega.add(zdruzenaGrupa);
+			
+			ZdruziStikajoceCrneGrupe(tocka);
 		}
 	}
 }
+
+
+
