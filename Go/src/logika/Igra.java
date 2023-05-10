@@ -1,6 +1,8 @@
 package logika;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import splosno.Poteza;
@@ -25,6 +27,8 @@ public class Igra {
 	private Set<Tocka> vseBeleTocke;
 	private Set<Tocka> vseCrneTocke;
 	
+	private List<Poteza> moznePoteze;
+	
 	// Return naPotezi
 	public Igralec naPotezi () {
 		return naPotezi;
@@ -36,10 +40,12 @@ public class Igra {
 	
 	// KONSTRUKTOR
 	public Igra() {
+		moznePoteze = new ArrayList<Poteza>();
 		plosca = new Polje[N][N];	// Ustvari novo prazno igralno ploščo
 		for (int i = 0; i < N; i++) {
 			for (int j = 0; j < N; j++) {
 				plosca[i][j] = Polje.PRAZNO;	// Na začetku je celotna plošča prazna, zato nastavimo vsako polje na tip prazno.
+				moznePoteze.add(new Poteza(i,j));
 			}
 		}
 		grupeBelega = new HashSet<Grupa>(); // Ustvarimo prazni mnozici grup za oba igralca.
@@ -49,6 +55,23 @@ public class Igra {
 		vseCrneTocke = new HashSet<Tocka>();
 		
 		naPotezi = Igralec.CRNI;	// Po pravilih začne črni igralec.
+	}
+	
+	public Igra(Igra igra) {
+		this.plosca = new Polje[N][N]; 
+		for(int i = 0; i < N; i++) { 
+			for(int j = 0; j < N; j++) { 
+				this.plosca[i][j] = igra.plosca[i][j]; 
+			} 
+		}
+		this.moznePoteze = new ArrayList<Poteza>(igra.moznePoteze); // According to stackoverflow bi to moralo narediti kopijo lista,
+																	// ampak nisem ziher. Če kaj ne bo delalo preveri to. 
+		this.naPotezi = igra.naPotezi;
+	}
+	
+	// vrne list vseh moznih potez
+	public List<Poteza> poteze(){
+		return moznePoteze;
 	}
 	
 	// Return trenutno stanje igre.
@@ -117,6 +140,7 @@ public class Igra {
 	
 	public boolean odigraj(Poteza poteza) {
 		if (plosca[poteza.x()][poteza.y()] == Polje.PRAZNO) {
+			moznePoteze.remove(poteza);
 			plosca[poteza.x()][poteza.y()] = naPotezi.getPolje();
 			
 			// Ustvarimo novo tocko, ki ustreza odigrani potezi.

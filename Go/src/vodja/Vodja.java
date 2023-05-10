@@ -25,7 +25,7 @@ public class Vodja {
 	
 	public static boolean clovekNaVrsti = false;
 	
-	public static Inteligenca inteligenca;
+	public static Inteligenca inteligenca = new Minimax(3);
 	
 	private static Stanje stanje;
 		
@@ -66,11 +66,27 @@ public class Vodja {
 		}
 	}
 	
-	public static void igrajRacunalnikovoPotezo() {
-		// Tukaj je že preverjeno, da je potezo možno narediti, saj bova to implementirala pri NEODLOCENO
-		Poteza poteza = inteligenca.izberiPotezo(igra); // Okej če kaj ne dela samo preveri, da se lahko na igro tako sklicujem
-		igra.odigraj(poteza);
-		igramo ();
+	public static void igrajRacunalnikovoPotezo() { 
+		Igra zacetkaIgra = igra; 
+		SwingWorker<Poteza,Void> worker = 
+				new SwingWorker<Poteza,Void>(){ 
+			@Override 
+			protected Poteza doInBackground(){ 
+				Poteza poteza = inteligenca.izberiPotezo(igra); 
+				try{TimeUnit.SECONDS.sleep(1);} catch(Exception e){}; 
+				return poteza; 
+			} 
+			@Override 
+			protected void done(){ 
+				Poteza poteza = null; 
+				try{poteza = get();} catch(Exception e){}; 
+				if(igra == zacetkaIgra){ 
+					igra.odigraj(poteza); 
+					igramo(); 
+				} 
+			} 
+		}; 
+		worker.execute(); 
 	}
 		
 	public static void igrajClovekovoPotezo(Poteza poteza) {
