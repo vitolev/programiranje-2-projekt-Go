@@ -2,6 +2,8 @@ package inteligenca;
 
 import logika.Igra;
 import splosno.Poteza;
+import logika.Igra;
+import logika.Igralec;
 
 public class Inteligenca extends splosno.KdoIgra {
 	
@@ -14,6 +16,5 @@ public class Inteligenca extends splosno.KdoIgra {
     public Poteza izberiPotezo(Igra igra) {
         // TODO: Tukaj bo algoritem za inteligenco
         return null;
-    }
-    
+    } 
 }

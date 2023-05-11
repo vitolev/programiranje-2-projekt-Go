@@ -14,6 +14,7 @@ import logika.Stanje;
 import logika.VrstaIgralca;
 import splosno.Poteza;
 import inteligenca.Inteligenca;
+import inteligenca.Minimax;
 
 public class Vodja {	
 	
@@ -25,13 +26,13 @@ public class Vodja {
 	
 	public static boolean clovekNaVrsti = false;
 	
-	public static Inteligenca inteligenca = new Minimax(3);
+	public static Inteligenca inteligenca = new Minimax(1);
 	
 	private static Stanje stanje;
 		
-	public static void igramoNovoIgro () {
+	public static void igramoNovoIgro () { 
 		igra = new Igra ();
-		inteligenca = new Inteligenca();	// Ustvarimo novo instanco razreda Inteligenca
+		//inteligenca = new Inteligenca();	// Ustvarimo novo instanco razreda Inteligenca
 		igramo ();
 	}
 	
