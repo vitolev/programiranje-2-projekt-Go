@@ -27,7 +27,7 @@ public class Igra {
 	private Set<Tocka> vseBeleTocke;
 	private Set<Tocka> vseCrneTocke;
 	
-	private List<Poteza> moznePoteze;
+	private ArrayList<Poteza> moznePoteze;
 	
 	// Return naPotezi
 	public Igralec naPotezi () {
@@ -64,9 +64,24 @@ public class Igra {
 				this.plosca[i][j] = igra.plosca[i][j]; 
 			} 
 		}
-		this.moznePoteze = new ArrayList<Poteza>(igra.moznePoteze); // According to stackoverflow bi to moralo narediti kopijo lista,
+		this.moznePoteze = (ArrayList<Poteza>) igra.moznePoteze.clone(); 
+		//this.moznePoteze = new ArrayList<Poteza>(igra.moznePoteze); // According to stackoverflow bi to moralo narediti kopijo lista,
 																	// ampak nisem ziher. Če kaj ne bo delalo preveri to. 
 		this.naPotezi = igra.naPotezi;
+		
+		grupeBelega = new HashSet<Grupa>(); // Ustvarimo prazni mnozici grup za oba igralca.
+		grupeCrnega = new HashSet<Grupa>(); //
+		
+		vseBeleTocke = new HashSet<Tocka>(igra.vseBeleTocke);
+		vseCrneTocke = new HashSet<Tocka>(igra.vseCrneTocke);
+		
+		for(Grupa grupa : igra.grupeBelega) {
+			grupeBelega.add(new Grupa(grupa));
+		}
+
+		for(Grupa grupa : igra.grupeCrnega) {
+			grupeCrnega.add(new Grupa(grupa));
+		}		
 	}
 	
 	// vrne list vseh moznih potez
@@ -178,6 +193,7 @@ public class Igra {
 					novaGrupa.dodajTocko(izbranaTocka);
 					grupeBelega.add(novaGrupa);
 				}
+				
 				vseBeleTocke.add(izbranaTocka);
 				ZdruziStikajoceBeleGrupe(izbranaTocka);
 			}

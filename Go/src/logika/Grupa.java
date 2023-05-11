@@ -13,6 +13,15 @@ public class Grupa {
 		sosednjeTocke = new HashSet<Tocka>();
 	}
 	
+	public Grupa(Grupa grupa) {
+		povezaneTocke = new HashSet<Tocka>();
+		sosednjeTocke = new HashSet<Tocka>();
+		
+		for(Tocka tocka : grupa.povezaneTocke) {
+			dodajTocko(tocka);
+		}
+	}
+	
 	public void dodajTocko(Tocka tocka) {
 		povezaneTocke.add(tocka);
 		posodobiSosednjeTocke(tocka);
