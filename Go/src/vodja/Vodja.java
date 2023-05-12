@@ -1,9 +1,6 @@
 package vodja;
 
-import java.util.Random;
 import java.util.Map;
-import java.util.List;
-
 import javax.swing.SwingWorker;
 import java.util.concurrent.TimeUnit;
 
@@ -26,9 +23,12 @@ public class Vodja {
 	
 	public static boolean clovekNaVrsti = false;
 	
-	public static Inteligenca inteligenca = new Minimax(1);
+	public static Inteligenca inteligenca = new Minimax(3);
 	
 	private static Stanje stanje;
+	
+	private static long startTime = 0;
+	private static long endTime = 0;
 		
 	public static void igramoNovoIgro () { 
 		igra = new Igra ();
@@ -37,6 +37,14 @@ public class Vodja {
 	}
 	
 	public static void igramo () {
+		System.out.println("");
+		System.out.println("");
+		System.out.println("");
+		System.out.println("");
+		endTime = System.nanoTime();
+		//System.out.println(Math.round((endTime - startTime) / 1000000000.0 * 100.0) / 100.0); // Izmerimo cas med potezami
+		endTime = 0;
+		startTime = System.nanoTime();
 		// okno potrebuje stanje pri funkciji osvezuGUI zato je treba najprej posodobiti stanje in nato klicati osveziGUI()
 		switch (igra.stanje()) {
 		case ZMAGA_BELI: 
@@ -74,7 +82,7 @@ public class Vodja {
 			@Override 
 			protected Poteza doInBackground(){ 
 				Poteza poteza = inteligenca.izberiPotezo(igra); 
-				try{TimeUnit.MILLISECONDS.sleep(10);} catch(Exception e){}; 
+				try{TimeUnit.MILLISECONDS.sleep(1);} catch(Exception e){}; 
 				return poteza; 
 			} 
 			@Override 

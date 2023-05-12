@@ -112,6 +112,8 @@ public class Igra {
 			}
 		}
 		
+		/* Mislim da je ta del nepotreben. Preveri se enkrat pravila
+		
 		// Preverimo, če je katero polje še prazno.
 		// Če ga imamo, igre ni konec in je nekdo na potezi
 		for (int i = 0; i < N; i++) {
@@ -121,6 +123,10 @@ public class Igra {
 		}
 		// Polje je polno, po pravilih Capture Go to pomeni, da je zmagal beli. 
 		return Stanje.ZMAGA_BELI;
+		
+		*/
+		
+		return Stanje.V_TEKU;
 	}
 	
 	private boolean ZmagovalecCRNI() {
@@ -207,7 +213,7 @@ public class Igra {
 	
 	// Nekatere grupe istega igralca (iste barve) se morda stikajo. Združimo te grupe v eno
 	private void ZdruziStikajoceBeleGrupe(Tocka tocka) {
-		Grupa grupa1 = null; // Grupa, ki vsebuje izbrano tocko. Takšna grupa zagoto mora obstajati, ker tocka pripada eni grupi.
+		Grupa grupa1 = null; // Grupa, ki vsebuje izbrano tocko. Takšna grupa zagotovo mora obstajati, ker tocka pripada eni grupi.
 		Grupa grupa2 = null; // Grupa, ki med sosednjimi točkami vsebuje izbrano tocko. Takšna grupa ni nujno da obstaja.
 					  		 // V primeru, da ne obstaja, to pomeni, da ne rabimo zdruziti ničesar.
 					  		 // Če pa obstaja pa moramo zdruziti ti dve grupi.

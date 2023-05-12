@@ -12,4 +12,9 @@ public class OcenjenaPoteza {
         this.ocena = ocena;
     	} 
     
+    @Override
+    public String toString() {
+    	return "Poteza: (" + poteza.x() + "," + poteza.y() + ") -- Ocena: " + ocena;
+    	}
+    
     }
