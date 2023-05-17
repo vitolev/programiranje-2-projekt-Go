@@ -28,8 +28,7 @@ public class Minimax extends Inteligenca {
         OcenjenaPoteza najboljsaPoteza =
         		// minimax(igra, this.globina, igra.naPotezi());
         		// alphabetaPoteze(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
-        		alphabetaPoteze(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi()); // ce v tej vrstici namesto minimax zberes funkcijo minimaxMultithread
-        																// potem bo resevalo z vsemi procesorji torej hitreje
+        		alphabetaPoteze(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi()); 
         return najboljsaPoteza.poteza;						  			 
     }
     
@@ -37,7 +36,7 @@ public class Minimax extends Inteligenca {
     public OcenjenaPoteza minimaxMultithread(Igra igra, int globina, Igralec jaz) {
     	// naredi thread pool z max 80 nitmi in nameni vse procesorje ki so na voljo
     	int numCores = Runtime.getRuntime().availableProcessors();
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(numCores, 80, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+    	ThreadPoolExecutor executor = new ThreadPoolExecutor(numCores, 80, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 
         
         // Naredi prakticno isto kot funkcija minimax, le da za vsako ocenjeno potezo jo da v list in na koncu ko
@@ -137,8 +136,38 @@ public class Minimax extends Inteligenca {
 	    return najboljsaPoteza;        
 	}
 	
+	// globina pri alphabetaMultithread mora biti vedno vecja od 1. TRENUTNO TO NE DELA
+	public OcenjenaPoteza alphabetaMultithread(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
+		// naredi thread pool z max 80 nitmi in nameni vse procesorje ki so na voljo
+    	int numCores = Runtime.getRuntime().availableProcessors();
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(numCores, 80, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+		
+		if (igra.naPotezi() == jaz) {AlphaBetaWorker.ocena = ZGUBA;} else {AlphaBetaWorker.ocena = ZMAGA;} 
+		List<Poteza> moznePoteze = igra.poteze();
+		AlphaBetaWorker.kandidat = moznePoteze.get(0);
+		for (Poteza p: moznePoteze) {
+				if(jeBliznjaTocka(p, igra)) {
+					Igra kopijaIgre = new Igra(igra);
+			        kopijaIgre.odigraj(p);
+			        AlphaBetaWorker worker = new AlphaBetaWorker(p, kopijaIgre, globina - 1, jaz, executor);
+	                executor.execute(worker);
+				}
+			}
+		// sprozimo naj executor obravnava vse threade
+	    executor.shutdown();
+	    
+	    // pocakamo, da se vsi threadi dokoncajo
+	    try {
+	        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+	    } catch (InterruptedException e) {
+	        // Handle the exception appropriately
+	    }
+	    System.out.println(AlphaBetaWorker.kandidat);
+	    return new OcenjenaPoteza(AlphaBetaWorker.kandidat, AlphaBetaWorker.ocena);
+	}
+	
 	// to je alphaBeta
-	public OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
+	public static OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
 			int ocena;
 			if (igra.naPotezi() == jaz) {ocena = ZGUBA;} else {ocena = ZMAGA;} 
 			List<Poteza> moznePoteze = igra.poteze(); // tukaj dodaj dodatno obrezovanje potez, torej samo sosednje itd.
@@ -157,12 +186,18 @@ public class Minimax extends Inteligenca {
 				            		(kopijaIgre, globina-1, alpha, beta, jaz).ocena;
 				        }
 				        if (igra.naPotezi() == jaz) { // Maksimiramo oceno
+				        	if(ocenap == ZMAGA) {
+				        		return new OcenjenaPoteza(p, ZMAGA);
+				        	}
 				            if (ocenap > ocena) { // mora biti > namesto >=
 				                ocena = ocenap;
 				                kandidat = p;
 				                alpha = Math.max(alpha, ocena);
 				            }
 				        } else { // igra.naPotezi() != jaz, torej minimiziramo oceno
+				        	if(ocenap == ZGUBA) {
+				        		return new OcenjenaPoteza(p, ZGUBA);
+				        	}
 				            if (ocenap < ocena) { // mora biti < namesto <=
 				                ocena = ocenap;
 				                kandidat = p;
@@ -172,61 +207,35 @@ public class Minimax extends Inteligenca {
 				        if (alpha >= beta) // Ostale poteze ne pomagajo
 				        	break;
 					}
-			        
 				}
 		    	return new OcenjenaPoteza(kandidat, ocena);
 			}
-	private boolean jeBliznjaTocka(Poteza p, Igra igra) {
-		Tocka tocka = new Tocka(p.x(), p.y());
-		
-		Tocka tocka1 = new Tocka(tocka.x() + 1, tocka.y());
-		if(igra.vseBeleTocke.contains(tocka1) || igra.vseCrneTocke.contains(tocka1)) {
-			return true;
-		}
-		Tocka tocka2 = new Tocka(tocka.x(), tocka.y() + 1);
-		if(igra.vseBeleTocke.contains(tocka2) || igra.vseCrneTocke.contains(tocka2)) {
-			return true;
-		}
-		Tocka tocka3 = new Tocka(tocka.x() - 1, tocka.y());
-		if(igra.vseBeleTocke.contains(tocka3) || igra.vseCrneTocke.contains(tocka3)) {
-			return true;
-		}
-		Tocka tocka4 = new Tocka(tocka.x(), tocka.y() - 1);
-		if(igra.vseBeleTocke.contains(tocka4) || igra.vseCrneTocke.contains(tocka4)) {
-			return true;
-		}
-		Tocka tocka5 = new Tocka(tocka.x() + 2, tocka.y());
-		if(igra.vseBeleTocke.contains(tocka5) || igra.vseCrneTocke.contains(tocka5)) {
-			return true;
-		}
-		Tocka tocka6 = new Tocka(tocka.x() - 2, tocka.y());
-		if(igra.vseBeleTocke.contains(tocka6) || igra.vseCrneTocke.contains(tocka6)) {
-			return true;
-		}
-		Tocka tocka7 = new Tocka(tocka.x(), tocka.y() + 2);
-		if(igra.vseBeleTocke.contains(tocka7) || igra.vseCrneTocke.contains(tocka7)) {
-			return true;
-		}
-		Tocka tocka8 = new Tocka(tocka.x(), tocka.y() - 2);
-		if(igra.vseBeleTocke.contains(tocka8) || igra.vseCrneTocke.contains(tocka8)) {
-			return true;
-		}
-		Tocka tocka9 = new Tocka(tocka.x() + 1, tocka.y() + 1);
-		if(igra.vseBeleTocke.contains(tocka9) || igra.vseCrneTocke.contains(tocka9)) {
-			return true;
-		}
-		Tocka tocka10 = new Tocka(tocka.x() + 1, tocka.y() - 1);
-		if(igra.vseBeleTocke.contains(tocka10) || igra.vseCrneTocke.contains(tocka10)) {
-			return true;
-		}
-		Tocka tocka11 = new Tocka(tocka.x() - 1, tocka.y() + 1);
-		if(igra.vseBeleTocke.contains(tocka11) || igra.vseCrneTocke.contains(tocka11)) {
-			return true;
-		}
-		Tocka tocka12 = new Tocka(tocka.x() - 1, tocka.y() - 1);
-		if(igra.vseBeleTocke.contains(tocka12) || igra.vseCrneTocke.contains(tocka12)) {
-			return true;
-		}
-		return false;
+	
+	private static boolean jeBliznjaTocka(Poteza p, Igra igra) {
+	    Tocka tocka = new Tocka(p.x(), p.y());
+	    
+	    int[][] offsets = {
+	        {1, 0},   // Right
+	        {0, 1},   // Up
+	        {-1, 0},  // Left
+	        {0, -1},  // Down
+	        {2, 0},   // Right 2
+	        {-2, 0},  // Left 2
+	        {0, 2},   // Up 2
+	        {0, -2},  // Down 2
+	        {1, 1},   // Up-Right
+	        {1, -1},  // Down-Right
+	        {-1, 1},  // Up-Left
+	        {-1, -1}  // Down-Left
+	    };
+	    
+	    for (int[] offset : offsets) {
+	        Tocka sosed = new Tocka(tocka.x() + offset[0], tocka.y() + offset[1]);
+	        if (igra.vseBeleTocke.contains(sosed) || igra.vseCrneTocke.contains(sosed)) {
+	            return true;
+	        }
+	    }
+	    
+	    return false;
 	}
 }
