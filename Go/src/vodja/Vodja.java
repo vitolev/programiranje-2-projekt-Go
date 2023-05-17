@@ -37,10 +37,6 @@ public class Vodja {
 	}
 	
 	public static void igramo () {
-		System.out.println("");
-		System.out.println("");
-		System.out.println("");
-		System.out.println("");
 		endTime = System.nanoTime();
 		System.out.println(Math.round((endTime - startTime) / 1000000000.0 * 100.0) / 100.0); // Izmerimo cas med potezami
 		endTime = 0;

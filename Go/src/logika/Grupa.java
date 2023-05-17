@@ -18,41 +18,34 @@ public class Grupa {
 		sosednjeTocke = new HashSet<Tocka>();
 		
 		for(Tocka tocka : grupa.povezaneTocke) {
-			dodajTocko(tocka);
+			povezaneTocke.add(tocka);
+		}
+		for(Tocka tocka : grupa.sosednjeTocke) {
+			sosednjeTocke.add(tocka);
 		}
 	}
 	
-	public void dodajTocko(Tocka tocka) {
+	public void dodajTocko(Tocka tocka, Set<Tocka> mnozicaNasprotnihTock) {
 		povezaneTocke.add(tocka);
-		posodobiSosednjeTocke(tocka);
+		dodajSosednjeTocke(tocka, mnozicaNasprotnihTock);
 	}
 	
 	// Dodaj sosednje tocke v množico sosednjih tock
-	private void posodobiSosednjeTocke(Tocka tocka) {
+	private void dodajSosednjeTocke(Tocka tocka, Set<Tocka> mnozicaNasprotnihTock) {
 		Tocka gor = new Tocka(tocka.x(), tocka.y() + 1);
 		Tocka dol = new Tocka(tocka.x(), tocka.y() - 1);
 		Tocka levo = new Tocka(tocka.x() - 1, tocka.y());
 		Tocka desno = new Tocka(tocka.x() + 1, tocka.y());
 		
-		if(!vsebujePovezanoTocko(gor) && gor.jeTockaVeljavna()) {sosednjeTocke.add(gor);}
-		if(!vsebujePovezanoTocko(dol) && dol.jeTockaVeljavna()) {sosednjeTocke.add(dol);}
-		if(!vsebujePovezanoTocko(levo) && levo.jeTockaVeljavna()) {sosednjeTocke.add(levo);}
-		if(!vsebujePovezanoTocko(desno) && desno.jeTockaVeljavna()) {sosednjeTocke.add(desno);}
+		if(!povezaneTocke.contains(gor) && gor.jeTockaVeljavna() && !mnozicaNasprotnihTock.contains(gor)) {sosednjeTocke.add(gor);}
+		if(!povezaneTocke.contains(dol) && dol.jeTockaVeljavna() && !mnozicaNasprotnihTock.contains(dol)) {sosednjeTocke.add(dol);}
+		if(!povezaneTocke.contains(levo) && levo.jeTockaVeljavna() && !mnozicaNasprotnihTock.contains(levo)) {sosednjeTocke.add(levo);}
+		if(!povezaneTocke.contains(desno) && desno.jeTockaVeljavna() && !mnozicaNasprotnihTock.contains(desno)) {sosednjeTocke.add(desno);}
 		
 		sosednjeTocke.remove(tocka);
 	}
 	
-	// Funkcija preveri ali je podana tocka ze vsebovana v tej grupi v množici povezanih točk
-	public boolean vsebujePovezanoTocko(Tocka tocka) {
-		return povezaneTocke.contains(tocka);
-	}
-	
-	// Funkcija preveri ali je podana tocka ze vsebovana v tej grupi v množici sosednjih točk
-	public boolean vsebujeSosednjoTocko(Tocka tocka) {
-		return sosednjeTocke.contains(tocka);
-	}
-	
-	// Za vizualno reprezentacijo objekta v konzoli. Lahko se izboljsa
+	// Za vizualno reprezentacijo objekta v konzoli.
 	@Override
 	public String toString() {
 		System.out.println("Povezane tocke:");
