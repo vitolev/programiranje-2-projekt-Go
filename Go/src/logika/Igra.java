@@ -24,8 +24,8 @@ public class Igra {
 	private Set<Grupa> grupeCrnega;
 	
 	// Mnozici vseh belih in crnih tock
-	private Set<Tocka> vseBeleTocke;
-	private Set<Tocka> vseCrneTocke;
+	public Set<Tocka> vseBeleTocke;
+	public Set<Tocka> vseCrneTocke;
 	
 	private ArrayList<Poteza> moznePoteze;
 	
