@@ -137,6 +137,7 @@ public class Minimax extends Inteligenca {
 	    return najboljsaPoteza;        
 	}
 	
+	// to je alphaBeta
 	public OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
 			int ocena;
 			if (igra.naPotezi() == jaz) {ocena = ZGUBA;} else {ocena = ZMAGA;} 
