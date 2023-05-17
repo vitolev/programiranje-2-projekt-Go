@@ -6,7 +6,7 @@ import java.util.Set;
 public class Grupa {
 	
 	public Set<Tocka> povezaneTocke;
-	public Set<Tocka> sosednjeTocke;
+	public Set<Tocka> sosednjeTocke; // Te sosedne točke so proste sosednje točke
 	
 	public Grupa() {
 		povezaneTocke = new HashSet<Tocka>();

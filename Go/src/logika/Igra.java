@@ -20,8 +20,8 @@ public class Igra {
 	private Polje[][] plosca;
 	
 	// Grupe (skupki povezanih figur) posameznega igralca
-	private Set<Grupa> grupeBelega;
-	private Set<Grupa> grupeCrnega;
+	public Set<Grupa> grupeBelega;
+	public Set<Grupa> grupeCrnega;
 	
 	// Mnozici vseh belih in crnih tock
 	public Set<Tocka> vseBeleTocke;
