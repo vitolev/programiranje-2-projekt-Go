@@ -42,7 +42,6 @@ public class Minimax extends Inteligenca {
 	    List<Poteza> moznePoteze = igra.poteze();
 
 	    for (Poteza p: moznePoteze) {
-
 	        Igra kopijaIgre = new Igra(igra);
 	        kopijaIgre.odigraj(p);
 	        int ocena;

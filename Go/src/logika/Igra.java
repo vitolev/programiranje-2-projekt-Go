@@ -89,7 +89,7 @@ public class Igra {
 		return moznePoteze;
 	}
 	
-	// Return trenutno stanje igre.
+	// Return stanje igre.
 	public Stanje stanje() {
 		// Preverimo, če je kdo zmagal. Ker je funkcija stanje() poklicana preden je izvedena naslednja poteza,
 		// je potrebno pogledat ali je igralec iz prejšnje poteze zmagal, zato gledamo naPotezi.nasprotnik().
@@ -131,13 +131,7 @@ public class Igra {
 	
 	private boolean ZmagovalecCRNI() {
 		for(Grupa belaGrupa : grupeBelega) {
-			boolean jeTaGrupaObkrozena = true;
-			for(Tocka sosednjaTocka : belaGrupa.sosednjeTocke) {
-				if(!vseCrneTocke.contains(sosednjaTocka)) {
-					jeTaGrupaObkrozena = false;
-				}
-			}
-			if(jeTaGrupaObkrozena) {
+			if(belaGrupa.sosednjeTocke.size() == 0) {
 				return true;
 			}
 		}
@@ -146,13 +140,7 @@ public class Igra {
 	
 	private boolean ZmagovalecBELI() {
 		for(Grupa crnaGrupa : grupeCrnega) {
-			boolean jeTaGrupaObkrozena = true;
-			for(Tocka sosednjaTocka : crnaGrupa.sosednjeTocke) {
-				if(!vseBeleTocke.contains(sosednjaTocka)) {
-					jeTaGrupaObkrozena = false;
-				}
-			}
-			if(jeTaGrupaObkrozena) {
+			if(crnaGrupa.sosednjeTocke.size() == 0) {
 				return true;
 			}
 		}
@@ -164,46 +152,65 @@ public class Igra {
 			moznePoteze.remove(poteza);
 			plosca[poteza.x()][poteza.y()] = naPotezi.getPolje();
 			
+			List<Grupa> grupeZaZdruzit = new ArrayList<Grupa>();
+			
 			// Ustvarimo novo tocko, ki ustreza odigrani potezi.
 			// To tocko dodamo ustrezni grupi ustreznemu igralcu. Če take grupe še ni, ustvari novo grupo.
 			Tocka izbranaTocka = new Tocka(poteza.x(), poteza.y());	
 			if(naPotezi == Igralec.CRNI) {
-				boolean dodalTockoObstojeciGrupi = false;
 				for(Grupa grupa : grupeCrnega) {
-					if(grupa.vsebujeSosednjoTocko(izbranaTocka)) {
-						grupa.dodajTocko(izbranaTocka);
-						dodalTockoObstojeciGrupi = true;
-						break; // lahko skocimo ven iz zanke, ker smo tocko ze dodali vsaj eni grupi
+					if(grupa.sosednjeTocke.contains(izbranaTocka)) {
+						grupa.dodajTocko(izbranaTocka, vseBeleTocke);
+						grupeZaZdruzit.add(grupa);
 					}
 				}
-				if(!dodalTockoObstojeciGrupi) {
+				vseCrneTocke.add(izbranaTocka);
+				
+				// ce nismo tocke dodalni nobeni obstojeci grupi, ustvarimo novo grupo s to tocko.
+				if(grupeZaZdruzit.size() == 0) {
 					Grupa novaGrupa = new Grupa();
-					novaGrupa.dodajTocko(izbranaTocka);
+					novaGrupa.dodajTocko(izbranaTocka, vseBeleTocke);
 					grupeCrnega.add(novaGrupa);
 				}
-				vseCrneTocke.add(izbranaTocka);
-				ZdruziStikajoceCrneGrupe(izbranaTocka);
+				else {
+					// zdruzimo grupe ce smo tocko dodali vecim grupam. Ce ne pa samo posodobimo stevilo obkoljenosti.
+					if(grupeZaZdruzit.size() > 1) {
+						ZdruziStikajoceCrneGrupe(grupeZaZdruzit);
+					}
+					else { // grupeZaZdruzit.size() == 1
+						
+					}
+				}
+				PosodobiObkoljenostNasprotnihGrup(izbranaTocka, false);
 			}
 			else {
 				// naPotezi = Igralec.BELI
-				boolean dodalTockoObstojeciGrupi = false;
 				for(Grupa grupa : grupeBelega) {
-					if(grupa.vsebujeSosednjoTocko(izbranaTocka)) {
-						grupa.dodajTocko(izbranaTocka);
-						dodalTockoObstojeciGrupi = true;
-						break; // lahko skocimo ven iz zanke, ker smo tocko ze dodali vsaj eni grupi
+					if(grupa.sosednjeTocke.contains(izbranaTocka)) {
+						grupa.dodajTocko(izbranaTocka, vseCrneTocke);
+						grupeZaZdruzit.add(grupa);
 					}
 				}
-				if(!dodalTockoObstojeciGrupi) {
+				vseBeleTocke.add(izbranaTocka);
+				
+				if(grupeZaZdruzit.size() == 0) {
 					Grupa novaGrupa = new Grupa();
-					novaGrupa.dodajTocko(izbranaTocka);
+					novaGrupa.dodajTocko(izbranaTocka, vseCrneTocke);
 					grupeBelega.add(novaGrupa);
 				}
+				else {
+					if(grupeZaZdruzit.size() > 1) {
+						ZdruziStikajoceBeleGrupe(grupeZaZdruzit);
+					}
+					else {
+						
+					}
+				}
+				PosodobiObkoljenostNasprotnihGrup(izbranaTocka, true);
 				
-				vseBeleTocke.add(izbranaTocka);
-				ZdruziStikajoceBeleGrupe(izbranaTocka);
 			}
-			naPotezi = naPotezi.nasprotnik(); 
+			naPotezi = naPotezi.nasprotnik();
+			
 			return true;
 		}
 		else {
@@ -212,65 +219,62 @@ public class Igra {
 	}
 	
 	// Nekatere grupe istega igralca (iste barve) se morda stikajo. Združimo te grupe v eno
-	private void ZdruziStikajoceBeleGrupe(Tocka tocka) {
-		Grupa grupa1 = null; // Grupa, ki vsebuje izbrano tocko. Takšna grupa zagotovo mora obstajati, ker tocka pripada eni grupi.
-		Grupa grupa2 = null; // Grupa, ki med sosednjimi točkami vsebuje izbrano tocko. Takšna grupa ni nujno da obstaja.
-					  		 // V primeru, da ne obstaja, to pomeni, da ne rabimo zdruziti ničesar.
-					  		 // Če pa obstaja pa moramo zdruziti ti dve grupi.
-		for(Grupa grupa : grupeBelega) {
-			if(grupa.vsebujePovezanoTocko(tocka)) {
-				grupa1 = grupa;
-			}
-			if(grupa.vsebujeSosednjoTocko(tocka)) {
-				grupa2 = grupa;
-			}
+	private void ZdruziStikajoceBeleGrupe(List<Grupa> grupeZaZdruzit) {
+		Grupa zdruzenaGrupa = new Grupa();
+		
+		for(Grupa grupa : grupeZaZdruzit) {
+			for(Tocka tocka : grupa.povezaneTocke) {
+				zdruzenaGrupa.dodajTocko(tocka, vseCrneTocke);
+			}			
 		}
 		
-		if(grupa2 != null) {
-			Grupa zdruzenaGrupa = new Grupa();
-			for(Tocka tocka_ : grupa1.povezaneTocke) {
-				zdruzenaGrupa.dodajTocko(tocka_);
-			}
-			for(Tocka tocka_ : grupa2.povezaneTocke) {
-				zdruzenaGrupa.dodajTocko(tocka_);
-			}
-			
-			grupeBelega.remove(grupa1);
-			grupeBelega.remove(grupa2);
-			grupeBelega.add(zdruzenaGrupa);
-			
-			ZdruziStikajoceBeleGrupe(tocka);
-		}
+		grupeBelega.removeAll(grupeZaZdruzit);
+		grupeBelega.add(zdruzenaGrupa);
 	}
 	
-	private void ZdruziStikajoceCrneGrupe(Tocka tocka) {
-		Grupa grupa1 = null; // Grupa, ki vsebuje izbrano tocko. Takšna grupa zagoto mora obstajati, ker tocka pripada eni grupi.
-		Grupa grupa2 = null; // Grupa, ki med sosednjimi točkami vsebuje izbrano tocko. Takšna grupa ni nujno da obstaja.
-					  		 // V primeru, da ne obstaja, to pomeni, da ne rabimo zdruziti ničesar.
-					  		 // Če pa obstaja pa moramo zdruziti ti dve grupi.
-		for(Grupa grupa : grupeCrnega) {
-			if(grupa.vsebujePovezanoTocko(tocka)) {
-				grupa1 = grupa;
-			}
-			if(grupa.vsebujeSosednjoTocko(tocka)) {
-				grupa2 = grupa;
-			}
+	private void ZdruziStikajoceCrneGrupe(List<Grupa> grupeZaZdruzit) {
+		
+		Grupa zdruzenaGrupa = new Grupa();
+		
+		for(Grupa grupa : grupeZaZdruzit) {
+			for(Tocka tocka : grupa.povezaneTocke) {
+				zdruzenaGrupa.dodajTocko(tocka, vseBeleTocke);
+			}			
 		}
 		
-		if(grupa2 != null) {
-			Grupa zdruzenaGrupa = new Grupa();
-			for(Tocka tocka_ : grupa1.povezaneTocke) {
-				zdruzenaGrupa.dodajTocko(tocka_);
+		grupeCrnega.removeAll(grupeZaZdruzit);
+		grupeCrnega.add(zdruzenaGrupa);
+		
+		//PosodobiSteviloDoObkoljenosti(zdruzenaGrupa, true);
+	}
+	/*
+	private void PosodobiSteviloDoObkoljenosti(Grupa grupa, boolean crnaGrupa) {
+		if(crnaGrupa) {
+			int stSosednjihTock = grupa.sosednjeTocke.size();
+			for(Tocka sosednjaTocka : grupa.sosednjeTocke) {
+				if(vseBeleTocke.contains(sosednjaTocka)) {
+					stSosednjihTock--;
+				}
 			}
-			for(Tocka tocka_ : grupa2.povezaneTocke) {
-				zdruzenaGrupa.dodajTocko(tocka_);
+			grupa.steviloDoObkoljenosti = stSosednjihTock;
+		}
+	}
+	*/
+	
+	private void PosodobiObkoljenostNasprotnihGrup(Tocka izbranaTocka, boolean aliJeCrniNasprotnik) {
+		if(aliJeCrniNasprotnik) {
+			for(Grupa grupa : grupeCrnega) {
+				if(grupa.sosednjeTocke.contains(izbranaTocka)) {
+					grupa.sosednjeTocke.remove(izbranaTocka);
+				}
 			}
-			
-			grupeCrnega.remove(grupa1);
-			grupeCrnega.remove(grupa2);
-			grupeCrnega.add(zdruzenaGrupa);
-			
-			ZdruziStikajoceCrneGrupe(tocka);
+		}
+		else {
+			for(Grupa grupa : grupeBelega) {
+				if(grupa.sosednjeTocke.contains(izbranaTocka)) {
+					grupa.sosednjeTocke.remove(izbranaTocka);
+				}
+			}
 		}
 	}
 }
