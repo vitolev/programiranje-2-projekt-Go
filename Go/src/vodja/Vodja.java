@@ -23,7 +23,7 @@ public class Vodja {
 	
 	public static boolean clovekNaVrsti = false;
 	
-	public static Inteligenca inteligenca = new Minimax(3);
+	public static Inteligenca inteligenca = new Minimax(4);
 	
 	private static Stanje stanje;
 	
@@ -42,7 +42,7 @@ public class Vodja {
 		System.out.println("");
 		System.out.println("");
 		endTime = System.nanoTime();
-		//System.out.println(Math.round((endTime - startTime) / 1000000000.0 * 100.0) / 100.0); // Izmerimo cas med potezami
+		System.out.println(Math.round((endTime - startTime) / 1000000000.0 * 100.0) / 100.0); // Izmerimo cas med potezami
 		endTime = 0;
 		startTime = System.nanoTime();
 		// okno potrebuje stanje pri funkciji osvezuGUI zato je treba najprej posodobiti stanje in nato klicati osveziGUI()

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.math.*;
 
 import logika.Igra;
 import logika.Igralec;
@@ -25,8 +26,11 @@ public class Minimax extends Inteligenca {
     @Override
     public Poteza izberiPotezo (Igra igra) {
         OcenjenaPoteza najboljsaPoteza =
+        		// minimax(igra, this.globina, igra.naPotezi());
+        		// alphabetaPoteze(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
                 minimaxMultithread(igra, this.globina, igra.naPotezi()); // ce v tej vrstici namesto minimax zberes funkcijo minimaxMultithread
-        return najboljsaPoteza.poteza;						  			 // potem bo resevalo z vsemi procesorji torej hitreje
+        																// potem bo resevalo z vsemi procesorji torej hitreje
+        return najboljsaPoteza.poteza;						  			 
     }
     
     // Isto kot minimax samo da resuje vecnitno
@@ -109,10 +113,7 @@ public class Minimax extends Inteligenca {
 	        Igra kopijaIgre = new Igra(igra);
 	        kopijaIgre.odigraj(p);
 	        int ocena;
-	        
-	        int n = 2*(3 - globina);
-	        //System.out.println(" ".repeat(n) + "(" + p.x() + "," + p.y() + ")");
-	        
+	        	        
 	        switch (kopijaIgre.stanje()) {
 		        case ZMAGA_CRNI: {
 		        	ocena = (jaz == Igralec.CRNI ? ZMAGA : ZGUBA); 
@@ -136,4 +137,41 @@ public class Minimax extends Inteligenca {
 	        
 	    return najboljsaPoteza;        
 	}
+	
+	public OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
+			int ocena;
+			if (igra.naPotezi() == jaz) {ocena = ZGUBA;} else {ocena = ZMAGA;} 
+			List<Poteza> moznePoteze = igra.poteze(); // tukaj dodaj dodatno obrezovanje potez, torej samo sosednje itd.
+			Poteza kandidat = moznePoteze.get(0);
+			for (Poteza p: moznePoteze) {
+			        Igra kopijaIgre = new Igra(igra);
+			        kopijaIgre.odigraj(p);
+			        int ocenap;
+			        switch (kopijaIgre.stanje()) {
+			        case ZMAGA_CRNI: ocenap = (jaz == Igralec.CRNI ? ZMAGA : ZGUBA); break;
+			        case ZMAGA_BELI: ocenap = (jaz == Igralec.BELI ? ZMAGA : ZGUBA); break;
+			        default:
+			            if (globina == 1) ocenap = OceniPozicijo.oceniPozicijo(kopijaIgre, jaz);
+			            else ocenap = alphabetaPoteze
+			            		(kopijaIgre, globina-1, alpha, beta, jaz).ocena;
+			        }
+			        if (igra.naPotezi() == jaz) { // Maksimiramo oceno
+			            if (ocenap > ocena) { // mora biti > namesto >=
+			                ocena = ocenap;
+			                kandidat = p;
+			                alpha = Math.max(alpha, ocena);
+			            }
+			        } else { // igra.naPotezi() != jaz, torej minimiziramo oceno
+			            if (ocenap < ocena) { // mora biti < namesto <=
+			                ocena = ocenap;
+			                kandidat = p;
+			                beta = Math.min(beta, ocena);
+			            }
+			        }
+			        if (alpha >= beta) // Ostale poteze ne pomagajo
+			        	break;
+				}
+		    	return new OcenjenaPoteza(kandidat, ocena);
+			}
+		 
 }

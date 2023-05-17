@@ -5,7 +5,7 @@ import splosno.Poteza;
 import logika.Igra;
 import logika.Igralec;
 
-public class Inteligenca extends splosno.KdoIgra {
+public abstract class Inteligenca extends splosno.KdoIgra {
 	
     public Inteligenca() {
     	super("Algebros");	// Tukaj sem najino skupino poimenoval Algebros.
@@ -13,8 +13,5 @@ public class Inteligenca extends splosno.KdoIgra {
     						// in za parameter potrebuje ime skupine.
     }
     
-    public Poteza izberiPotezo(Igra igra) {
-        // TODO: Tukaj bo algoritem za inteligenco
-        return null;
-    } 
+    public abstract Poteza izberiPotezo(Igra igra); 
 }
