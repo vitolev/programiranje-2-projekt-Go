@@ -24,17 +24,19 @@ public class OceniPozicijo {
 		int mojaOgrozenost = mojaOgrozenost(mojeGrupe);
 		int njegovaOgrozenost = mojaOgrozenost(njegoveGrupe);
 		
-		//int mojeObmocje = mojeObmocje(igra, mojaBarva);
-		//int njegovoObmocje = mojeObmocje(igra, njegovaBarva);
-
+		int mojeObmocje = mojeObmocje(igra, mojaBarva);
+		int mojKoeficientObmocja = ((1 + mojeObmocje) / 81);
+		int obratenKoeficient = (1 + ((-1) * ((mojKoeficientObmocja * 81) - 1))) / 81; // kasneje mogoče to popravi da bo lepše
+		
 		int razlikaOgrozenosti = njegovaOgrozenost - mojaOgrozenost;
 		
 		int evalvacija;
-		/* if (razlikaOgrozenosti < 0) { // pac tu ni vreje, sn v kurcu
-			evalvacija = razlikaOgrozenosti * (njegovoObmocje / (mojeObmocje + 1/10));
+		if (razlikaOgrozenosti < 0) { // pac tu ni vreje, sn v kurcu
+			evalvacija = razlikaOgrozenosti * (obratenKoeficient);
 		}
+		
 		else { // 8=D *peach*
-			evalvacija = razlikaOgrozenosti * (mojeObmocje / (njegovoObmocje + 1/10));
+			evalvacija = razlikaOgrozenosti * (mojKoeficientObmocja);
 		}
 		
 		// Random RANDOM = new Random();
@@ -48,7 +50,7 @@ public class OceniPozicijo {
 		if (evalvacija < -100){
 			evalvacija = -99;
 		}
-		*/
+		
 		//System.out.println(evalvacija);
 		return razlikaOgrozenosti;
 	}

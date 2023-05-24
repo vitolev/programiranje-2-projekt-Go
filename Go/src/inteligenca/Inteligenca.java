@@ -93,7 +93,7 @@ public class Inteligenca extends splosno.KdoIgra {
 	
 	// to je alphaBeta
 	public static OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) throws TimeException {
-		if(System.nanoTime() - startTime > 5500000000.0) {
+		if(System.nanoTime() - startTime > 550000000000.0) {
 			throw new TimeException("Out of time");
 		}
 			int ocena;
