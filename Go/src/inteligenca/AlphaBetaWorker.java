@@ -34,6 +34,7 @@ public class AlphaBetaWorker implements Runnable{
 	public void run() {
 		Igra kopijaIgre = new Igra(igra);
         kopijaIgre.odigraj(p);
+        /*
 		int ocenap = Minimax.alphabetaPoteze(kopijaIgre, globina - 1, alpha, beta, jaz).ocena;
 		// Maksimiramo oceno
 		if(ocenap == 100) {
@@ -46,5 +47,6 @@ public class AlphaBetaWorker implements Runnable{
             kandidat = p;
             alpha = Math.max(alpha, ocena);
         }
+        */
 	}
 }

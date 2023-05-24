@@ -17,6 +17,8 @@ public class Minimax extends Inteligenca {
 	private static final int ZGUBA = -ZMAGA;
 	
     private int globina;
+
+    public static long startTime;
     
     public Minimax (int globina) {
         super(); // tu je bilo not passanje arguments za globino, zdaj zbrisal
@@ -27,7 +29,7 @@ public class Minimax extends Inteligenca {
     public Poteza izberiPotezo (Igra igra) {
         OcenjenaPoteza najboljsaPoteza =
         		// minimax(igra, this.globina, igra.naPotezi());
-        		alphabetaPoteze(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
+        		prvaIteracijaAlphaBeta(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
         		//alphabetaMultithread(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi()); 
         return najboljsaPoteza.poteza;						  			 
     }
@@ -167,14 +169,74 @@ public class Minimax extends Inteligenca {
 	    return new OcenjenaPoteza(AlphaBetaWorker.kandidat, AlphaBetaWorker.ocena);
 	}
 	
+	public OcenjenaPoteza prvaIteracijaAlphaBeta(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
+		startTime = System.nanoTime();
+		int ocena;
+		if (igra.naPotezi() == jaz) {ocena = ZGUBA;} else {ocena = ZMAGA;} 
+		List<Poteza> moznePoteze = igra.poteze(); // tukaj dodaj dodatno obrezovanje potez, torej samo sosednje itd.
+		if(moznePoteze.size() == 81) {
+			return new OcenjenaPoteza(new Poteza(4,4), 100);
+		}
+		Poteza kandidat = moznePoteze.get(0);
+		for (Poteza p: moznePoteze) {
+				if(jeBliznjaTocka(p, igra)) {
+					Igra kopijaIgre = new Igra(igra);
+			        kopijaIgre.odigraj(p);
+			        int ocenap;
+			        switch (kopijaIgre.stanje()) {
+			        case ZMAGA_CRNI: {
+			        	ocenap = (jaz == Igralec.CRNI ? ZMAGA : ZGUBA); 
+			        	break;
+			        }
+			        case ZMAGA_BELI: {
+			        	ocenap = (jaz == Igralec.BELI ? ZMAGA : ZGUBA);
+			        	break;
+			        }
+			        default:
+			            if (globina == 1) ocenap = OceniPozicijo.oceniPozicijo(kopijaIgre, jaz);
+			            else {
+			            	try {
+			            		ocenap = alphabetaPoteze(kopijaIgre, globina-1, alpha, beta, jaz).ocena;
+			            	}
+			            	catch(Exception e) {
+			            		return new OcenjenaPoteza(kandidat, 0);
+			            	}
+			            }
+			        }
+			        if (igra.naPotezi() == jaz) { // Maksimiramo oceno
+			        	if(ocenap == ZMAGA) {
+			        		return new OcenjenaPoteza(p, ZMAGA);
+			        	}
+			            if (ocenap > ocena) { // mora biti > namesto >=
+			                ocena = ocenap;
+			                kandidat = p;
+			                alpha = Math.max(alpha, ocena);
+			            }
+			        } else { // igra.naPotezi() != jaz, torej minimiziramo oceno
+			        	if(ocenap == ZGUBA) {
+			        		return new OcenjenaPoteza(p, ZGUBA);
+			        	}
+			            if (ocenap < ocena) { // mora biti < namesto <=
+			                ocena = ocenap;
+			                kandidat = p;
+			                beta = Math.min(beta, ocena);
+			            }
+			        }
+			        if (alpha >= beta) // Ostale poteze ne pomagajo
+			        	break;
+				}
+			}
+	    	return new OcenjenaPoteza(kandidat, ocena);
+	}
+	
 	// to je alphaBeta
-	public static OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
+	public static OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) throws TimeException {
+		if(System.nanoTime() - startTime > 5500000000.0) {
+			throw new TimeException("Out of time");
+		}
 			int ocena;
 			if (igra.naPotezi() == jaz) {ocena = ZGUBA;} else {ocena = ZMAGA;} 
 			List<Poteza> moznePoteze = igra.poteze(); // tukaj dodaj dodatno obrezovanje potez, torej samo sosednje itd.
-			if(moznePoteze.size() == 81) {
-				return new OcenjenaPoteza(new Poteza(4,4), 100);
-			}
 			Poteza kandidat = moznePoteze.get(0);
 			for (Poteza p: moznePoteze) {
 					if(jeBliznjaTocka(p, igra)) {
@@ -247,4 +309,12 @@ public class Minimax extends Inteligenca {
 	    
 	    return false;
 	}
+}
+
+class TimeException extends Exception {
+    public TimeException(String s)
+    {
+        // Call constructor of parent Exception
+        super(s);
+    }
 }
