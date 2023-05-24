@@ -84,6 +84,44 @@ public class Igra {
 		}		
 	}
 	
+	// tukaj vrne seznam vseh stolpcev in vrstic
+	public Polje[][] vrsticeInStolpci() {
+        Polje[][] vrsticeInStolpci = new Polje[N*2][N];
+
+        // Get columns
+        for (int j = 0; j < N; j++) {
+            for (int i = 0; i < N; i++) {
+            	vrsticeInStolpci[j][i] = plosca[i][j];
+            }
+        }
+
+        // Get rows
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j < N; j++) {
+            	vrsticeInStolpci[i + N][j] = plosca[i][j];
+            }
+        }
+
+        return vrsticeInStolpci;
+    }
+	
+	public static Polje[] reverseArray(Polje[] array) {
+	    int start = 0;
+	    int end = array.length - 1;
+
+	    while (start < end) {
+	        Polje temp = array[start];
+	        array[start] = array[end];
+	        array[end] = temp;
+	        
+	        start++;
+	        end--;
+	    }
+
+	    return array;
+	}
+
+	
 	// vrne list vseh moznih potez
 	public List<Poteza> poteze(){
 		return moznePoteze;

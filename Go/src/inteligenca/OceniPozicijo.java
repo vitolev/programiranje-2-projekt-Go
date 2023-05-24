@@ -2,6 +2,7 @@ package inteligenca;
 
 import logika.Igra;
 import logika.Igralec;
+import logika.Polje;
 import logika.Grupa;
 import java.util.Random;
 import java.util.Set;
@@ -16,14 +17,40 @@ public class OceniPozicijo {
 		// Vse tri posebej bomo najprej ocenili od -100 do 100;
 		Set<Grupa> mojeGrupe = (jaz == Igralec.CRNI ? igra.grupeCrnega : igra.grupeBelega);
 		Set<Grupa> njegoveGrupe = (jaz == Igralec.CRNI ? igra.grupeBelega : igra.grupeCrnega);
+		Polje mojaBarva = (jaz == Igralec.CRNI ? Polje.CRNO : Polje.BELO);
+		Polje njegovaBarva = (jaz == Igralec.CRNI ? Polje.BELO : Polje.CRNO);
+
 		
 		int mojaOgrozenost = mojaOgrozenost(mojeGrupe);
 		int njegovaOgrozenost = mojaOgrozenost(njegoveGrupe);
+		
+		//int mojeObmocje = mojeObmocje(igra, mojaBarva);
+		//int njegovoObmocje = mojeObmocje(igra, njegovaBarva);
 
+		int razlikaOgrozenosti = njegovaOgrozenost - mojaOgrozenost;
+		
+		int evalvacija;
+		/* if (razlikaOgrozenosti < 0) { // pac tu ni vreje, sn v kurcu
+			evalvacija = razlikaOgrozenosti * (njegovoObmocje / (mojeObmocje + 1/10));
+		}
+		else { // 8=D *peach*
+			evalvacija = razlikaOgrozenosti * (mojeObmocje / (njegovoObmocje + 1/10));
+		}
 		
 		// Random RANDOM = new Random();
 		// int evalvacija = RANDOM.nextInt(-100, 100);
-		return njegovaOgrozenost - mojaOgrozenost;
+		
+		// Mogoce pol to skini
+		if (evalvacija > 100){
+			evalvacija = 99;
+		}
+		
+		if (evalvacija < -100){
+			evalvacija = -99;
+		}
+		*/
+		//System.out.println(evalvacija);
+		return razlikaOgrozenosti;
 	}
 	
 	// Funkcija, ki vzame množico grup in vrne ogroženost glede na to grupo
@@ -56,11 +83,51 @@ public class OceniPozicijo {
 		}
 		double vsotaZaOgrozenost = 0;
 		if (mojeOgrozene != null) {
+			int maksimalno = Collections.max(mojeOgrozene); 
 			for (int i : mojeOgrozene) {
-				vsotaZaOgrozenost += Math.pow(i, -2)  ;
+				if (i == maksimalno) {
+					vsotaZaOgrozenost += Math.pow(i, -1); // Tista polja, ki so najbolj ogrožena prispevajo veliko več k ogroženosti
+				}
+				else {
+					vsotaZaOgrozenost += Math.pow(i, -2) ;
+				}
 			}
 		}
 		return Math.floorDiv((int)(100 * vsotaZaOgrozenost), 3);
 	}
 	
+	public static int ovrednotiSeznam (Polje[] seznamPolj, Polje mojaBarva) { // potem še samo naredi reversed da pogleda
+		Polje trenutnoPolje = Polje.PRAZNO;
+		int stevec = 0;
+		for (Polje polje : seznamPolj) {
+			if (polje == Polje.PRAZNO) { // Najprej pogledamo, če je polje prazno
+				stevec += 1;
+			}
+			else { // Če ni prazno, potem ločimo na nekaj primerov:
+				if (trenutnoPolje == Polje.PRAZNO) { //Če je trenutno prazno, potem spremenimo trenutno polje, k temu se bo pripisovalo
+					trenutnoPolje = polje;
+					stevec += 1;
+				}
+				else if (trenutnoPolje == polje) { // če je enako kot je bilo skos, torej še en isti kamenček, štejemo naprej
+					stevec += 2; // !!!!!! TUKAJ MOGOČE DODAJ DA +2, saj je to boljše, ker ima več območja, če ima še pokrito, vseeno premisli kaj je boljše
+				}
+				else { // zadnji primer je, ko naleti na nasprotnikivo polje, tukaj vrne vrednost
+					break;
+				}
+			}
+		}
+		if (trenutnoPolje != mojaBarva) {
+			stevec = (-1) * stevec;
+		}
+		return stevec;
+	}
+	
+	public static int mojeObmocje(Igra igra, Polje mojaBarva) { // območje prispeva k zmagi v primeru igranja do konca in prispeva k večji obkoljenosti nasprotnika
+		int vsota = 0;
+		for (Polje[] seznam : igra.vrsticeInStolpci()) {
+			vsota += ovrednotiSeznam(seznam, mojaBarva);
+			vsota += ovrednotiSeznam(Igra.reverseArray(seznam), mojaBarva);
+		}
+		return vsota;
+	}
 }

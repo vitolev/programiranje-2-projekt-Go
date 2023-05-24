@@ -23,7 +23,7 @@ public class Vodja {
 	
 	public static boolean clovekNaVrsti = false;
 	
-	public static Inteligenca inteligenca = new Minimax(5);
+	public static Inteligenca inteligenca = new Inteligenca();
 	
 	private static Stanje stanje;
 	
