@@ -15,7 +15,7 @@ public class Inteligenca extends splosno.KdoIgra {
 	
     private int globina;
 
-    public static long startTime;
+    private static long startTime;
     
     public Inteligenca() {
     	super("Algebros");	// Tukaj sem najino skupino poimenoval Algebros.
@@ -39,9 +39,12 @@ public class Inteligenca extends splosno.KdoIgra {
 		if(moznePoteze.size() == 81) {
 			return new OcenjenaPoteza(new Poteza(4,4), 100);
 		}
-		Poteza kandidat = moznePoteze.get(0);
+		Poteza kandidat = null;
 		for (Poteza p: moznePoteze) {
 				if(jeBliznjaTocka(p, igra)) {
+					if(kandidat == null) {
+						kandidat = p;
+					}
 					Igra kopijaIgre = new Igra(igra);
 			        kopijaIgre.odigraj(p);
 			        int ocenap;
@@ -61,28 +64,28 @@ public class Inteligenca extends splosno.KdoIgra {
 			            		ocenap = alphabetaPoteze(kopijaIgre, globina-1, alpha, beta, jaz).ocena;
 			            	}
 			            	catch(Exception e) {
-			            		return new OcenjenaPoteza(kandidat, 0);
+			            		return prvaIteracijaAlphaBeta(igra, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
 			            	}
 			            }
 			        }
 			        if (igra.naPotezi() == jaz) { // Maksimiramo oceno
-			        	if(ocenap == ZMAGA) {
-			        		return new OcenjenaPoteza(p, ZMAGA);
-			        	}
 			            if (ocenap > ocena) { // mora biti > namesto >=
 			                ocena = ocenap;
 			                kandidat = p;
 			                alpha = Math.max(alpha, ocena);
 			            }
-			        } else { // igra.naPotezi() != jaz, torej minimiziramo oceno
-			        	if(ocenap == ZGUBA) {
-			        		return new OcenjenaPoteza(p, ZGUBA);
+			        	if(ocenap == ZMAGA) {
+			        		return new OcenjenaPoteza(p, ZMAGA);
 			        	}
+			        } else { // igra.naPotezi() != jaz, torej minimiziramo oceno
 			            if (ocenap < ocena) { // mora biti < namesto <=
 			                ocena = ocenap;
 			                kandidat = p;
 			                beta = Math.min(beta, ocena);
 			            }
+			        	if(ocenap == ZGUBA) {
+			        		return new OcenjenaPoteza(p, ZGUBA);
+			        	}
 			        }
 			        if (alpha >= beta) // Ostale poteze ne pomagajo
 			        	break;
@@ -93,7 +96,7 @@ public class Inteligenca extends splosno.KdoIgra {
 	
 	// to je alphaBeta
 	public static OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) throws TimeException {
-		if(System.nanoTime() - startTime > 5500000000.0) {
+		if(System.nanoTime() - startTime > 5000000000.0) {
 			throw new TimeException("Out of time");
 		}
 			int ocena;

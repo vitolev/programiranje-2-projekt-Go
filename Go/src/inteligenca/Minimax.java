@@ -311,10 +311,3 @@ public class Minimax extends Inteligenca {
 	}
 }
 
-class TimeException extends Exception {
-    public TimeException(String s)
-    {
-        // Call constructor of parent Exception
-        super(s);
-    }
-}
