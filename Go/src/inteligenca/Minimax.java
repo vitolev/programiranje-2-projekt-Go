@@ -27,12 +27,12 @@ public class Minimax extends Inteligenca {
     public Poteza izberiPotezo (Igra igra) {
         OcenjenaPoteza najboljsaPoteza =
         		// minimax(igra, this.globina, igra.naPotezi());
-        		// alphabetaPoteze(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
-        		alphabetaPoteze(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi()); 
+        		alphabetaPoteze(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
+        		//alphabetaMultithread(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi()); 
         return najboljsaPoteza.poteza;						  			 
     }
     
-    // Isto kot minimax samo da resuje vecnitno
+    // Isto kot minimax samo da resuje vecnitno.
     public OcenjenaPoteza minimaxMultithread(Igra igra, int globina, Igralec jaz) {
     	// naredi thread pool z max 80 nitmi in nameni vse procesorje ki so na voljo
     	int numCores = Runtime.getRuntime().availableProcessors();
@@ -147,9 +147,7 @@ public class Minimax extends Inteligenca {
 		AlphaBetaWorker.kandidat = moznePoteze.get(0);
 		for (Poteza p: moznePoteze) {
 				if(jeBliznjaTocka(p, igra)) {
-					Igra kopijaIgre = new Igra(igra);
-			        kopijaIgre.odigraj(p);
-			        AlphaBetaWorker worker = new AlphaBetaWorker(p, kopijaIgre, globina - 1, jaz, executor);
+			        AlphaBetaWorker worker = new AlphaBetaWorker(p, igra, globina, jaz, executor);
 	                executor.execute(worker);
 				}
 			}
@@ -162,7 +160,10 @@ public class Minimax extends Inteligenca {
 	    } catch (InterruptedException e) {
 	        // Handle the exception appropriately
 	    }
-	    System.out.println(AlphaBetaWorker.kandidat);
+	    AlphaBetaWorker.alpha = Integer.MIN_VALUE;
+	    AlphaBetaWorker.beta = Integer.MAX_VALUE;
+	    AlphaBetaWorker.ocena = Integer.MIN_VALUE;
+	    
 	    return new OcenjenaPoteza(AlphaBetaWorker.kandidat, AlphaBetaWorker.ocena);
 	}
 	
@@ -171,6 +172,9 @@ public class Minimax extends Inteligenca {
 			int ocena;
 			if (igra.naPotezi() == jaz) {ocena = ZGUBA;} else {ocena = ZMAGA;} 
 			List<Poteza> moznePoteze = igra.poteze(); // tukaj dodaj dodatno obrezovanje potez, torej samo sosednje itd.
+			if(moznePoteze.size() == 81) {
+				return new OcenjenaPoteza(new Poteza(4,4), 100);
+			}
 			Poteza kandidat = moznePoteze.get(0);
 			for (Poteza p: moznePoteze) {
 					if(jeBliznjaTocka(p, igra)) {
@@ -178,12 +182,17 @@ public class Minimax extends Inteligenca {
 				        kopijaIgre.odigraj(p);
 				        int ocenap;
 				        switch (kopijaIgre.stanje()) {
-				        case ZMAGA_CRNI: ocenap = (jaz == Igralec.CRNI ? ZMAGA : ZGUBA); break;
-				        case ZMAGA_BELI: ocenap = (jaz == Igralec.BELI ? ZMAGA : ZGUBA); break;
+				        case ZMAGA_CRNI: {
+				        	ocenap = (jaz == Igralec.CRNI ? ZMAGA : ZGUBA); 
+				        	break;
+				        }
+				        case ZMAGA_BELI: {
+				        	ocenap = (jaz == Igralec.BELI ? ZMAGA : ZGUBA);
+				        	break;
+				        }
 				        default:
 				            if (globina == 1) ocenap = OceniPozicijo.oceniPozicijo(kopijaIgre, jaz);
-				            else ocenap = alphabetaPoteze
-				            		(kopijaIgre, globina-1, alpha, beta, jaz).ocena;
+				            else ocenap = alphabetaPoteze(kopijaIgre, globina-1, alpha, beta, jaz).ocena;
 				        }
 				        if (igra.naPotezi() == jaz) { // Maksimiramo oceno
 				        	if(ocenap == ZMAGA) {

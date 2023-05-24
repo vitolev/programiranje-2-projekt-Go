@@ -78,7 +78,7 @@ public class Vodja {
 			@Override 
 			protected Poteza doInBackground(){ 
 				Poteza poteza = inteligenca.izberiPotezo(igra); 
-				try{TimeUnit.MILLISECONDS.sleep(1);} catch(Exception e){}; 
+				try{TimeUnit.MILLISECONDS.sleep(1000);} catch(Exception e){}; 
 				return poteza; 
 			} 
 			@Override 

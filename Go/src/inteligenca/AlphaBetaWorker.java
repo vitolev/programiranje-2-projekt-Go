@@ -15,9 +15,9 @@ public class AlphaBetaWorker implements Runnable{
 	private Igralec jaz;
 	private ThreadPoolExecutor executor;
 	
-	private static int alpha = Integer.MIN_VALUE;
-	private static int beta = Integer.MAX_VALUE;
-	public static int ocena;
+	public static int alpha = Integer.MIN_VALUE;
+	public static int beta = Integer.MAX_VALUE;
+	public static int ocena = Integer.MIN_VALUE;
 	public static Poteza kandidat;
 	
 	public static List<OcenjenaPoteza> potencialnePoteze = new ArrayList<OcenjenaPoteza>();
@@ -32,23 +32,19 @@ public class AlphaBetaWorker implements Runnable{
 
 	@Override
 	public void run() {
-		int ocenap = Minimax.alphabetaPoteze(igra, globina, alpha, beta, jaz).ocena;
-		if (igra.naPotezi() == jaz) { // Maksimiramo oceno
-            if (ocenap > ocena) { // mora biti > namesto >=
-                ocena = ocenap;
-                kandidat = p;
-                alpha = Math.max(alpha, ocena);
-            }
-        } else { // igra.naPotezi() != jaz, torej minimiziramo oceno
-            if (ocenap < ocena) { // mora biti < namesto <=
-                ocena = ocenap;
-                kandidat = p;
-                beta = Math.min(beta, ocena);
-            }
-        }
+		Igra kopijaIgre = new Igra(igra);
+        kopijaIgre.odigraj(p);
+		int ocenap = Minimax.alphabetaPoteze(kopijaIgre, globina - 1, alpha, beta, jaz).ocena;
+		// Maksimiramo oceno
+		if(ocenap == 100) {
+    		kandidat = p;
+    		executor.shutdownNow();
+    	}
 		
-		if(alpha >= beta) {
-			executor.shutdownNow();
-		}
+		if (ocenap > ocena) { // mora biti > namesto >=
+            ocena = ocenap;
+            kandidat = p;
+            alpha = Math.max(alpha, ocena);
+        }
 	}
 }
