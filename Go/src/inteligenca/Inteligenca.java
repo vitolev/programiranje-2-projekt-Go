@@ -61,10 +61,19 @@ public class Inteligenca extends splosno.KdoIgra {
 			            if (globina == 1) ocenap = OceniPozicijo.oceniPozicijo(kopijaIgre, jaz);
 			            else {
 			            	try {
+			            		// poskusi resit s podano globino in ce ne resi v zglednem casu (mislim da je 5,5s max) vrze izjemo
+			            		// ter naj sedaj resi z globino 4. Po najinemu testiranju to resi v manj kot 1s torej ni panike 
+			            		// da bi tudi v tem primeru vrglo izjemo. Ampak da smo ziher ce slucajno se to vrze izjemo
+			            		// naj tedaj pogleda kar za globino 1 kar pa sploh ne more vreci izjeme.
 			            		ocenap = alphabetaPoteze(kopijaIgre, globina-1, alpha, beta, jaz).ocena;
 			            	}
 			            	catch(Exception e) {
-			            		return prvaIteracijaAlphaBeta(igra, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
+			            		try {
+			            			return prvaIteracijaAlphaBeta(igra, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
+			            		}
+			            		catch(Exception f) {
+			            			return prvaIteracijaAlphaBeta(igra, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
+			            		}
 			            	}
 			            }
 			        }
