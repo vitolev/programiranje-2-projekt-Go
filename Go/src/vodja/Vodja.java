@@ -7,11 +7,13 @@ import java.util.concurrent.TimeUnit;
 import gui.GlavnoOkno;
 import logika.Igra;
 import logika.Igralec;
+import logika.Polje;
 import logika.Stanje;
 import logika.VrstaIgralca;
 import splosno.Poteza;
 import inteligenca.Inteligenca;
 import inteligenca.Minimax;
+import inteligenca.OceniPozicijo;
 
 public class Vodja {	
 	
@@ -77,7 +79,7 @@ public class Vodja {
 				new SwingWorker<Poteza,Void>(){ 
 			@Override 
 			protected Poteza doInBackground(){ 
-				Poteza poteza = inteligenca.izberiPotezo(igra); 
+				Poteza poteza = inteligenca.izberiPotezo(igra);
 				try{TimeUnit.MILLISECONDS.sleep(1);} catch(Exception e){}; 
 				return poteza; 
 			} 
@@ -86,7 +88,7 @@ public class Vodja {
 				Poteza poteza = null; 
 				try{poteza = get();} catch(Exception e){}; 
 				if(igra == zacetkaIgra){ 
-					igra.odigraj(poteza); 
+					igra.odigraj(poteza);
 					igramo(); 
 				} 
 			} 

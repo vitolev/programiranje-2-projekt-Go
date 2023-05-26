@@ -20,23 +20,21 @@ public class OceniPozicijo {
 		Polje mojaBarva = (jaz == Igralec.CRNI ? Polje.CRNO : Polje.BELO);
 		Polje njegovaBarva = (jaz == Igralec.CRNI ? Polje.BELO : Polje.CRNO);
 
-		
+		int k = 1;
 		int mojaOgrozenost = mojaOgrozenost(mojeGrupe);
 		int njegovaOgrozenost = mojaOgrozenost(njegoveGrupe);
-		
+		int razlikaOgrozenosti = njegovaOgrozenost - mojaOgrozenost; //vec imas boljse je
+
 		int mojeObmocje = mojeObmocje(igra, mojaBarva);
-		int mojKoeficientObmocja = ((1 + mojeObmocje) / 81);
-		int obratenKoeficient = (1 + ((-1) * ((mojKoeficientObmocja * 81) - 1))) / 81; // kasneje mogoče to popravi da bo lepše
+		int njegovoObmocje = mojeObmocje(igra, njegovaBarva);
+		int razlikaObmocja = (mojeObmocje - njegovoObmocje) / 1000;
 		
-		int razlikaOgrozenosti = njegovaOgrozenost - mojaOgrozenost;
-		
-		int evalvacija;
-		if (razlikaOgrozenosti < 0) { // pac tu ni vreje, sn v kurcu
-			evalvacija = razlikaOgrozenosti * (obratenKoeficient);
+		int evalvacija = razlikaOgrozenosti;
+		if (razlikaObmocja > 0) {
+			evalvacija += k;
 		}
-		
-		else { // 8=D *peach*
-			evalvacija = razlikaOgrozenosti * (mojKoeficientObmocja);
+		else {
+			evalvacija -= k;
 		}
 		
 		// Random RANDOM = new Random();
@@ -50,9 +48,7 @@ public class OceniPozicijo {
 		if (evalvacija < -100){
 			evalvacija = -99;
 		}
-		
-		//System.out.println(evalvacija);
-		return razlikaOgrozenosti;
+		return evalvacija;
 	}
 	
 	// Funkcija, ki vzame množico grup in vrne ogroženost glede na to grupo
