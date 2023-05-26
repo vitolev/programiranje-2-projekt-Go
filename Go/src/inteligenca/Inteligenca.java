@@ -69,9 +69,11 @@ public class Inteligenca extends splosno.KdoIgra {
 			            	}
 			            	catch(Exception e) {
 			            		try {
+			            			System.out.println("Globina 4");
 			            			return prvaIteracijaAlphaBeta(igra, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
 			            		}
 			            		catch(Exception f) {
+			            			System.out.println("Globina 1");
 			            			return prvaIteracijaAlphaBeta(igra, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
 			            		}
 			            	}
@@ -106,14 +108,18 @@ public class Inteligenca extends splosno.KdoIgra {
 	// to je alphaBeta
 	public static OcenjenaPoteza alphabetaPoteze(Igra igra, int globina, int alpha, int beta, Igralec jaz) throws TimeException {
 		if(System.nanoTime() - startTime > 5000000000.0) {
+			System.out.println("Zmanjkalo casa");
 			throw new TimeException("Out of time");
 		}
 			int ocena;
 			if (igra.naPotezi() == jaz) {ocena = ZGUBA;} else {ocena = ZMAGA;} 
 			List<Poteza> moznePoteze = igra.poteze(); // tukaj dodaj dodatno obrezovanje potez, torej samo sosednje itd.
-			Poteza kandidat = moznePoteze.get(0);
+			Poteza kandidat = null;
 			for (Poteza p: moznePoteze) {
 					if(jeBliznjaTocka(p, igra)) {
+						if(kandidat == null) {
+							kandidat = p;
+						}
 						Igra kopijaIgre = new Igra(igra);
 				        kopijaIgre.odigraj(p);
 				        int ocenap;
