@@ -17,6 +17,8 @@ public class Inteligenca extends splosno.KdoIgra {
 
     private static long startTime;
     
+    private static boolean prvaPonovitev = true;
+    
     public Inteligenca() {
     	super("Algebros");	// Tukaj sem najino skupino poimenoval Algebros.
     						// Ta super mora bit da poklice konstruktor iz razreda KdoIgra, ker ga tukaj extendamo
@@ -28,7 +30,8 @@ public class Inteligenca extends splosno.KdoIgra {
     	OcenjenaPoteza najboljsaPoteza =
         		// minimax(igra, this.globina, igra.naPotezi());
         		prvaIteracijaAlphaBeta(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
-        		//alphabetaMultithread(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi()); 
+        		//alphabetaMultithread(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
+    	prvaPonovitev = true;
         return najboljsaPoteza.poteza;	
     }
     public OcenjenaPoteza prvaIteracijaAlphaBeta(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
@@ -61,18 +64,19 @@ public class Inteligenca extends splosno.KdoIgra {
 			            if (globina == 1) ocenap = OceniPozicijo.oceniPozicijo(kopijaIgre, jaz);
 			            else {
 			            	try {
-			            		// poskusi resit s podano globino in ce ne resi v zglednem casu (mislim da je 5,5s max) vrze izjemo
+			            		// poskusi resit s podano globino in ce ne resi v zglednem casu (mislim da je 5s max) vrze izjemo
 			            		// ter naj sedaj resi z globino 4. Po najinemu testiranju to resi v manj kot 1s torej ni panike 
 			            		// da bi tudi v tem primeru vrglo izjemo. Ampak da smo ziher ce slucajno se to vrze izjemo
 			            		// naj tedaj pogleda kar za globino 1 kar pa sploh ne more vreci izjeme
 			            		ocenap = alphabetaPoteze(kopijaIgre, globina-1, alpha, beta, jaz).ocena;
 			            	}
 			            	catch(Exception e) {
-			            		try {
+			            		if(prvaPonovitev) {
+			            			prvaPonovitev = false;
 			            			System.out.println("Globina 4");
 			            			return prvaIteracijaAlphaBeta(igra, 4, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
 			            		}
-			            		catch(Exception f) {
+			            		else {
 			            			System.out.println("Globina 1");
 			            			return prvaIteracijaAlphaBeta(igra, 1, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
 			            		}
