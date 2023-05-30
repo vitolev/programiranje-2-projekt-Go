@@ -1,6 +1,7 @@
 package logika;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class Grupa {
@@ -8,11 +9,13 @@ public class Grupa {
 	public Set<Tocka> povezaneTocke;
 	public Set<Tocka> sosednjeTocke; // Te sosedne točke so proste sosednje točke
 	
+	// Konstruktor za cisto novo grupo
 	public Grupa() {
 		povezaneTocke = new HashSet<Tocka>();
 		sosednjeTocke = new HashSet<Tocka>();
 	}
 	
+	// Konstruktor za narediti identicno kopijo glede na neko dano grupo
 	public Grupa(Grupa grupa) {
 		povezaneTocke = new HashSet<Tocka>();
 		sosednjeTocke = new HashSet<Tocka>();
@@ -22,6 +25,16 @@ public class Grupa {
 		}
 		for(Tocka tocka : grupa.sosednjeTocke) {
 			sosednjeTocke.add(tocka);
+		}
+	}
+	
+	// Konstruktor za narediti kopijo grupe, s tem da je lahko mnozica sosednjih tock drugacna
+	public Grupa(Grupa grupa, Set<Tocka> mnozicaNasprotnihTock) {
+		povezaneTocke = new HashSet<Tocka>();
+		sosednjeTocke = new HashSet<Tocka>();
+		
+		for(Tocka tocka : grupa.povezaneTocke) {
+			dodajTocko(tocka, mnozicaNasprotnihTock);
 		}
 	}
 	

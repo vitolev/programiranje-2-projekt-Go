@@ -1,6 +1,9 @@
 package vodja;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
 import javax.swing.SwingWorker;
 import java.util.concurrent.TimeUnit;
 
@@ -31,16 +34,19 @@ public class Vodja {
 	
 	private static long startTime = 0;
 	private static long endTime = 0;
+	
+	private static Set<Igra> preteklaStanja;
 		
 	public static void igramoNovoIgro () { 
 		igra = new Igra ();
+		preteklaStanja = new HashSet<Igra>();
 		//inteligenca = new Inteligenca();	// Ustvarimo novo instanco razreda Inteligenca
 		igramo ();
 	}
 	
 	public static void igramo () {
 		endTime = System.nanoTime();
-		System.out.println(Math.round((endTime - startTime) / 1000000000.0 * 100.0) / 100.0); // Izmerimo cas med potezami
+		//System.out.println(Math.round((endTime - startTime) / 1000000000.0 * 100.0) / 100.0); // Izmerimo cas med potezami
 		endTime = 0;
 		startTime = System.nanoTime();
 		// okno potrebuje stanje pri funkciji osvezuGUI zato je treba najprej posodobiti stanje in nato klicati osveziGUI()
@@ -97,9 +103,16 @@ public class Vodja {
 	}
 		
 	public static void igrajClovekovoPotezo(Poteza poteza) {
-		if (igra.odigraj(poteza)) {
-			clovekNaVrsti = false;
-			igramo ();
+		Igra kopijaIgre = new Igra(igra);
+		if (kopijaIgre.odigraj(poteza)) {
+			// Ker obstaja pravilo, da se situacija (stanje) na plosci ne sme ponoviti belezimo vsa pretekla stanja in
+			// preverimo da se slucajno ta situacija ni ze ponovila
+			if(!preteklaStanja.contains(kopijaIgre)) {
+				preteklaStanja.add(kopijaIgre);
+				clovekNaVrsti = false;
+				igra.odigraj(poteza);
+				igramo ();
+			}
 		}
 	}
 	

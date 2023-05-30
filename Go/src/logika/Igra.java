@@ -3,6 +3,7 @@ package logika;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import splosno.Poteza;
@@ -57,6 +58,7 @@ public class Igra {
 		naPotezi = Igralec.CRNI;	// Po pravilih začne črni igralec.
 	}
 	
+	// Konstruktor za kopijo dane igre
 	public Igra(Igra igra) {
 		this.plosca = new Polje[N][N]; 
 		for(int i = 0; i < N; i++) { 
@@ -131,6 +133,7 @@ public class Igra {
 	public Stanje stanje() {
 		// Preverimo, če je kdo zmagal. Ker je funkcija stanje() poklicana preden je izvedena naslednja poteza,
 		// je potrebno pogledat ali je igralec iz prejšnje poteze zmagal, zato gledamo naPotezi.nasprotnik().
+		/*
 		if(naPotezi.nasprotnik() == Igralec.CRNI) {
 			if(ZmagovalecCRNI()) {
 				return Stanje.ZMAGA_CRNI;
@@ -149,7 +152,7 @@ public class Igra {
 				return Stanje.ZMAGA_CRNI;
 			}
 		}
-		
+		*/
 		/* Mislim da je ta del nepotreben. Preveri se enkrat pravila
 		
 		// Preverimo, če je katero polje še prazno.
@@ -167,22 +170,24 @@ public class Igra {
 		return Stanje.V_TEKU;
 	}
 	
-	private boolean ZmagovalecCRNI() {
+	private List<Grupa> ObkoljenaGrupaBELA() {
+		List<Grupa> obkoljeneBeleGrupe = new ArrayList<Grupa>();
 		for(Grupa belaGrupa : grupeBelega) {
 			if(belaGrupa.sosednjeTocke.size() == 0) {
-				return true;
+				obkoljeneBeleGrupe.add(belaGrupa);
 			}
 		}
-		return false;
+		return obkoljeneBeleGrupe;
 	}
 	
-	private boolean ZmagovalecBELI() {
+	private List<Grupa> ObkoljenaGrupaCRNA() {
+		List<Grupa> obkoljeneCrneGrupe = new ArrayList<Grupa>();
 		for(Grupa crnaGrupa : grupeCrnega) {
 			if(crnaGrupa.sosednjeTocke.size() == 0) {
-				return true;
+				obkoljeneCrneGrupe.add(crnaGrupa);
 			}
 		}
-		return false;
+		return obkoljeneCrneGrupe;
 	}
 	
 	public boolean odigraj(Poteza poteza) {
@@ -219,7 +224,27 @@ public class Igra {
 						
 					}
 				}
-				PosodobiObkoljenostNasprotnihGrup(izbranaTocka, false);
+				PosodobiObkoljenostNasprotnihGrup(izbranaTocka, Igralec.BELI);
+				
+				// Preverimo ali bi igralec s to potezo obkolil kakšne grupe in ustrezno spremeni stanje na polju
+				List<Grupa> obkoljeneBeleGrupe = ObkoljenaGrupaBELA();
+				if(obkoljeneBeleGrupe.size() > 0) {
+					// Crni igralec je s to potezo obkolil neko belo grupo. Odstrani to belo grupo
+					for(Grupa grupa : obkoljeneBeleGrupe) {
+						for(Tocka tocka : grupa.povezaneTocke) {
+							vseBeleTocke.remove(tocka);
+							plosca[tocka.x()][tocka.y()] = Polje.PRAZNO;
+						}
+						grupeBelega.remove(grupa);
+					}
+					
+					// Ker smo odstranili nekatere grupe od nasprotnika, smo s tem morda spremenili sosednje tocke lastnih grup
+					PosodobiObkoljenostSvojihGrup(Igralec.CRNI);
+				}
+				else if (ObkoljenaGrupaCRNA().size() > 0) {
+					// Crni igralec je s to potezo poskusal narediti samomorilno potezo, kar ni dovoljeno. Zato return false
+					return false;
+				}
 			}
 			else {
 				// naPotezi = Igralec.BELI
@@ -244,8 +269,27 @@ public class Igra {
 						
 					}
 				}
-				PosodobiObkoljenostNasprotnihGrup(izbranaTocka, true);
+				PosodobiObkoljenostNasprotnihGrup(izbranaTocka, Igralec.CRNI);
 				
+				// Preverimo ali bi igralec s to potezo obkolil kakšne grupe in ustrezno spremeni stanje na polju
+				List<Grupa> obkoljeneCrneGrupe = ObkoljenaGrupaCRNA();
+				if(obkoljeneCrneGrupe.size() > 0) {
+					// Crni igralec je s to potezo obkolil neko belo grupo. Odstrani to belo grupo
+					for(Grupa grupa : obkoljeneCrneGrupe) {
+						for(Tocka tocka : grupa.povezaneTocke) {
+							vseCrneTocke.remove(tocka);
+							plosca[tocka.x()][tocka.y()] = Polje.PRAZNO;
+						}
+						grupeCrnega.remove(grupa);
+					}
+					
+					// Ker smo odstranili nekatere grupe od nasprotnika, smo s tem morda spremenili sosednje tocke lastnih grup
+					PosodobiObkoljenostSvojihGrup(Igralec.BELI);
+				}
+				else if (ObkoljenaGrupaBELA().size() > 0) {
+					// Crni igralec je s to potezo poskusal narediti samomorilno potezo, kar ni dovoljeno. Zato return false
+					return false;
+				}
 			}
 			naPotezi = naPotezi.nasprotnik();
 			
@@ -282,25 +326,10 @@ public class Igra {
 		
 		grupeCrnega.removeAll(grupeZaZdruzit);
 		grupeCrnega.add(zdruzenaGrupa);
-		
-		//PosodobiSteviloDoObkoljenosti(zdruzenaGrupa, true);
 	}
-	/*
-	private void PosodobiSteviloDoObkoljenosti(Grupa grupa, boolean crnaGrupa) {
-		if(crnaGrupa) {
-			int stSosednjihTock = grupa.sosednjeTocke.size();
-			for(Tocka sosednjaTocka : grupa.sosednjeTocke) {
-				if(vseBeleTocke.contains(sosednjaTocka)) {
-					stSosednjihTock--;
-				}
-			}
-			grupa.steviloDoObkoljenosti = stSosednjihTock;
-		}
-	}
-	*/
 	
-	private void PosodobiObkoljenostNasprotnihGrup(Tocka izbranaTocka, boolean aliJeCrniNasprotnik) {
-		if(aliJeCrniNasprotnik) {
+	private void PosodobiObkoljenostNasprotnihGrup(Tocka izbranaTocka, Igralec nasprotnik) {
+		if(nasprotnik == Igralec.CRNI) {
 			for(Grupa grupa : grupeCrnega) {
 				if(grupa.sosednjeTocke.contains(izbranaTocka)) {
 					grupa.sosednjeTocke.remove(izbranaTocka);
@@ -315,6 +344,51 @@ public class Igra {
 			}
 		}
 	}
+	
+	private void PosodobiObkoljenostSvojihGrup(Igralec igralec) {
+		if(igralec == Igralec.BELI) {
+			Set<Grupa> noveGrupeBelega = new HashSet<Grupa>();
+			for(Grupa grupa : grupeBelega) {
+				noveGrupeBelega.add(new Grupa(grupa, vseCrneTocke));
+			}
+			grupeBelega.clear();
+			grupeBelega = noveGrupeBelega;
+		}
+		else {
+			Set<Grupa> noveGrupeCrnega = new HashSet<Grupa>();
+			for(Grupa grupa : grupeCrnega) {
+				noveGrupeCrnega.add(new Grupa(grupa, vseBeleTocke));
+			}
+			grupeCrnega.clear();
+			grupeCrnega = noveGrupeCrnega;
+		}
+	}
+	
+	@Override
+    public boolean equals(Object o) {
+ 
+        // If the object is compared with itself then return true 
+        if (o == this) {
+            return true;
+        }
+ 
+        /* Check if o is an instance of Igra or not
+          "null instanceof [type]" also returns false */
+        if (!(o instanceof Igra)) {
+            return false;
+        }
+         
+        // typecast o to Tocka so that we can compare data members
+        Igra igra = (Igra) o;
+         
+        // Compare the data members and return accordingly
+        return vseCrneTocke.containsAll(igra.vseCrneTocke) && vseBeleTocke.containsAll(igra.vseBeleTocke);
+    }
+	
+	@Override
+    public int hashCode() {
+        return Objects.hash(vseBeleTocke, vseCrneTocke);
+    }
 }
 
 
