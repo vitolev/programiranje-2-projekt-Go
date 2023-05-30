@@ -107,7 +107,7 @@ public class Vodja {
 		if (kopijaIgre.odigraj(poteza)) {
 			// Ker obstaja pravilo, da se situacija (stanje) na plosci ne sme ponoviti belezimo vsa pretekla stanja in
 			// preverimo da se slucajno ta situacija ni ze ponovila
-			if(!preteklaStanja.contains(kopijaIgre)) {
+			if(!preteklaStanja.contains(kopijaIgre) || (poteza.x() == -1 && poteza.y() == -1)) {
 				preteklaStanja.add(kopijaIgre);
 				clovekNaVrsti = false;
 				igra.odigraj(poteza);

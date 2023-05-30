@@ -30,6 +30,9 @@ public class Igra {
 	
 	private ArrayList<Poteza> moznePoteze;
 	
+	private boolean crniPredalPotezo;
+	private boolean beliPredalPotezo;
+	
 	// Return naPotezi
 	public Igralec naPotezi () {
 		return naPotezi;
@@ -55,6 +58,9 @@ public class Igra {
 		vseBeleTocke = new HashSet<Tocka>();
 		vseCrneTocke = new HashSet<Tocka>();
 		
+		crniPredalPotezo = false;
+		beliPredalPotezo = false;
+		
 		naPotezi = Igralec.CRNI;	// Po pravilih začne črni igralec.
 	}
 	
@@ -76,6 +82,9 @@ public class Igra {
 		
 		vseBeleTocke = new HashSet<Tocka>(igra.vseBeleTocke);
 		vseCrneTocke = new HashSet<Tocka>(igra.vseCrneTocke);
+		
+		crniPredalPotezo = igra.crniPredalPotezo;
+		beliPredalPotezo = igra.beliPredalPotezo;
 		
 		for(Grupa grupa : igra.grupeBelega) {
 			grupeBelega.add(new Grupa(grupa));
@@ -129,43 +138,84 @@ public class Igra {
 		return moznePoteze;
 	}
 	
+	private int[][] offsets = {
+			{1,0},
+			{-1,0},
+			{0,1},
+			{0,-1}
+	};
+	
+	private boolean isValidCoordinate(int i, int j) {
+		return i >= 0 && i < N && j >= 0 && j < N;
+	}
+	
 	// Return stanje igre.
 	public Stanje stanje() {
-		// Preverimo, če je kdo zmagal. Ker je funkcija stanje() poklicana preden je izvedena naslednja poteza,
-		// je potrebno pogledat ali je igralec iz prejšnje poteze zmagal, zato gledamo naPotezi.nasprotnik().
-		/*
-		if(naPotezi.nasprotnik() == Igralec.CRNI) {
-			if(ZmagovalecCRNI()) {
+		if(beliPredalPotezo && crniPredalPotezo) {
+			// Igre je konec. Za zdaj to vrne neodloceno samo zato da se igra konca
+			for(int i = 0; i < N; i++) {
+				for(int j = 0; j < N; j++) {
+					if(plosca[i][j] == Polje.PRAZNO) {
+						// Preverimo ce ta tocka pripada crnemu teritoriju, belemu teritoriju ali pa ce je nevtralno
+						int stCrnihSosedov = 0;
+						int stBelihSosedov = 0;
+						int steviloSosedov = 0;
+						for(int[] offset : offsets) {
+							int x = i + offset[0];
+							int y = j + offset[1];
+							if(isValidCoordinate(x, y)) {
+								steviloSosedov++;
+								if(plosca[x][y] == Polje.NEVTRALNO) {
+									plosca[i][j] = Polje.NEVTRALNO;
+									break;
+								}
+								if(plosca[x][y] == Polje.CRNO) {
+									stCrnihSosedov++;
+								}
+								else if(plosca[x][y] == Polje.BELO) {
+									stBelihSosedov++;
+								}
+								else { // plosca[x][y] = Polje.PRAZNO
+									
+								}
+							}
+						}
+						
+						if(stCrnihSosedov == steviloSosedov) {
+							// Obkoljen je izkljucno samo s crnimi
+							plosca[i][j] = Polje.CRNO;
+							vseCrneTocke.add(new Tocka(i, j));
+							continue;
+						}
+						if(stBelihSosedov == steviloSosedov) {
+							// Obkoljen je izklucno samo z belimi
+							plosca[i][j] = Polje.BELO;
+							vseBeleTocke.add(new Tocka(i, j));
+							continue;
+						}
+						if(stBelihSosedov + stCrnihSosedov == steviloSosedov) {
+							// Tocka je v celoti obkoljena, delno z belimi, delno s crnimi figurami
+							plosca[i][j] = Polje.NEVTRALNO;
+							continue;
+						}
+						// Ce pridemo do sem v kodi pomeni, da je tocka obkoljena vsaj delno s praznimi polji
+						// zato ne moremo enostavno ugotoviti ali je nevtralna, bela ali crna.
+					}
+				}
+			}
+			int tockeCrnega = vseCrneTocke.size();
+			int tockeBelega = vseBeleTocke.size();
+			System.out.println("Tocke crnega: " + tockeCrnega);
+			System.out.println("Tocke belega: " + tockeBelega);
+			
+			if(tockeCrnega > tockeBelega) {
 				return Stanje.ZMAGA_CRNI;
 			}
-			// Preveri suicide move
-			if(ZmagovalecBELI()) {
+			if(tockeCrnega < tockeBelega) {
 				return Stanje.ZMAGA_BELI;
 			}
+			return Stanje.NEODLOCENO;
 		}
-		else { // naPotezi.nasprotnik() = Igralec.BELI
-			if(ZmagovalecBELI()) {
-				return Stanje.ZMAGA_BELI;
-			}
-			// Preveri suicide move
-			if(ZmagovalecCRNI()) {
-				return Stanje.ZMAGA_CRNI;
-			}
-		}
-		*/
-		/* Mislim da je ta del nepotreben. Preveri se enkrat pravila
-		
-		// Preverimo, če je katero polje še prazno.
-		// Če ga imamo, igre ni konec in je nekdo na potezi
-		for (int i = 0; i < N; i++) {
-			for (int j = 0; j < N; j++) {
-				if (plosca[i][j] == Polje.PRAZNO) return Stanje.V_TEKU;
-			}
-		}
-		// Polje je polno, po pravilih Capture Go to pomeni, da je zmagal beli. 
-		return Stanje.ZMAGA_BELI;
-		
-		*/
 		
 		return Stanje.V_TEKU;
 	}
@@ -190,8 +240,28 @@ public class Igra {
 		return obkoljeneCrneGrupe;
 	}
 	
+	public void predajPotezo() {
+		
+	}
+	
 	public boolean odigraj(Poteza poteza) {
+		// Poteza (-1,-1) oznacuje predajo poteze.
+		if(poteza.x() == -1 && poteza.y() == -1) {
+			if(naPotezi == Igralec.CRNI) {
+				crniPredalPotezo = true;
+			}
+			else {
+				beliPredalPotezo = true;
+			}
+			naPotezi = naPotezi.nasprotnik();
+			
+			return true;
+		}
+		
 		if (plosca[poteza.x()][poteza.y()] == Polje.PRAZNO) {
+			crniPredalPotezo = false;
+			beliPredalPotezo = false;
+			
 			moznePoteze.remove(poteza);
 			plosca[poteza.x()][poteza.y()] = naPotezi.getPolje();
 			

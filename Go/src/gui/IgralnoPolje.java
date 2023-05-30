@@ -5,6 +5,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
@@ -19,22 +21,23 @@ import vodja.Vodja;
  * Pravokotno območje, v katerem je narisano igralno polje.
  */
 @SuppressWarnings("serial")
-public class IgralnoPolje extends JPanel implements MouseListener {
+public class IgralnoPolje extends JPanel implements MouseListener, KeyListener {
 	
 	public IgralnoPolje() {
-		setBackground(Color.LIGHT_GRAY);
+		setBackground(new Color(219,178,111));
 		this.addMouseListener(this);
-		
+		this.addKeyListener(this);
+		setFocusable(true);
 	}
 
 	@Override
 	public Dimension getPreferredSize() {
-		return new Dimension(400, 400);
+		return new Dimension(600, 600);
 	}
 
 	
 	// Relativna širina črte
-	private final static double LINE_WIDTH = 0.08;
+	private final static double LINE_WIDTH = 0.04;
 	
 	// Širina enega kvadratka
 	private double squareWidth() {
@@ -74,7 +77,7 @@ public class IgralnoPolje extends JPanel implements MouseListener {
 		double w = squareWidth();
 		
 		// črte
-		g2.setColor(Color.BLACK);
+		g2.setColor(new Color(59,59,59));
 		g2.setStroke(new BasicStroke((float) (w * LINE_WIDTH)));
 		for (int i = 0; i < Igra.N; i++) {
 			g2.drawLine((int)(i * w + w / 2),
@@ -145,6 +148,27 @@ public class IgralnoPolje extends JPanel implements MouseListener {
 
 	@Override
 	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		if(Vodja.clovekNaVrsti) {
+			if(e.getKeyChar() == 'p') {
+				Vodja.igrajClovekovoPotezo(new Poteza(-1, -1));
+			}
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
 		
 	}

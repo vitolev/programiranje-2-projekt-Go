@@ -5,5 +5,5 @@ package logika;
  */
 
 public enum Polje {
-	BELO, CRNO, PRAZNO
+	BELO, CRNO, PRAZNO, NEVTRALNO
 }
