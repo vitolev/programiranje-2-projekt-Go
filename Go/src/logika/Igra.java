@@ -33,6 +33,7 @@ public class Igra {
 	private boolean crniPredalPotezo;
 	private boolean beliPredalPotezo;
 	
+	
 	// Return naPotezi
 	public Igralec naPotezi () {
 		return naPotezi;
@@ -151,60 +152,59 @@ public class Igra {
 	
 	// Return stanje igre.
 	public Stanje stanje() {
+		// Preverimo ce sta oba igralca predala potezo in tako koncamo igro.
 		if(beliPredalPotezo && crniPredalPotezo) {
-			// Igre je konec. Za zdaj to vrne neodloceno samo zato da se igra konca
+			// Ideja: Ustvarimo mnozico grup, ki vsebuje vse grupe praznih polj. Te grupe so bodisi obkoljene z belimi ali crnimi tockami
+			// ali pa z robom same igralne plosce. Iz tega s cim so obkrozene dolocimo ali ta grupa praznih polj oz. teritorij
+			// pripada belemu, crnemu ali pa je nevtralen
+			Set<Grupa> nezasedeneGrupe = new HashSet<Grupa>();
 			for(int i = 0; i < N; i++) {
 				for(int j = 0; j < N; j++) {
 					if(plosca[i][j] == Polje.PRAZNO) {
-						// Preverimo ce ta tocka pripada crnemu teritoriju, belemu teritoriju ali pa ce je nevtralno
-						int stCrnihSosedov = 0;
-						int stBelihSosedov = 0;
-						int steviloSosedov = 0;
-						for(int[] offset : offsets) {
-							int x = i + offset[0];
-							int y = j + offset[1];
-							if(isValidCoordinate(x, y)) {
-								steviloSosedov++;
-								if(plosca[x][y] == Polje.NEVTRALNO) {
-									plosca[i][j] = Polje.NEVTRALNO;
-									break;
-								}
-								if(plosca[x][y] == Polje.CRNO) {
-									stCrnihSosedov++;
-								}
-								else if(plosca[x][y] == Polje.BELO) {
-									stBelihSosedov++;
-								}
-								else { // plosca[x][y] = Polje.PRAZNO
-									
-								}
+						boolean dodalTockoObstojeciGrupi = false;
+						for(Grupa grupa : nezasedeneGrupe) {
+							if(grupa.sosednjeTocke.contains(new Tocka(i,j))) {
+								grupa.dodajTocko(new Tocka(i,j), new HashSet<Tocka>());
+								dodalTockoObstojeciGrupi = true;
+								break;
 							}
 						}
-						
-						if(stCrnihSosedov == steviloSosedov) {
-							// Obkoljen je izkljucno samo s crnimi
-							plosca[i][j] = Polje.CRNO;
-							vseCrneTocke.add(new Tocka(i, j));
-							continue;
+						if(!dodalTockoObstojeciGrupi) {
+							Grupa novaGrupa = new Grupa();
+							novaGrupa.dodajTocko(new Tocka(i,j), new HashSet<Tocka>());
+							nezasedeneGrupe.add(novaGrupa);
 						}
-						if(stBelihSosedov == steviloSosedov) {
-							// Obkoljen je izklucno samo z belimi
-							plosca[i][j] = Polje.BELO;
-							vseBeleTocke.add(new Tocka(i, j));
-							continue;
-						}
-						if(stBelihSosedov + stCrnihSosedov == steviloSosedov) {
-							// Tocka je v celoti obkoljena, delno z belimi, delno s crnimi figurami
-							plosca[i][j] = Polje.NEVTRALNO;
-							continue;
-						}
-						// Ce pridemo do sem v kodi pomeni, da je tocka obkoljena vsaj delno s praznimi polji
-						// zato ne moremo enostavno ugotoviti ali je nevtralna, bela ali crna.
 					}
 				}
 			}
+			
+			// Tocke posameznega igralca so enake vsoti stevilo vseh postavljenih figur in stevilo obmocja, ki ga omejujejo
 			int tockeCrnega = vseCrneTocke.size();
 			int tockeBelega = vseBeleTocke.size();
+			
+			// Za vsako grupo iz mnozice nezasedenih grup preverimo ali meji samo na crne ali samo na bele ali pa na oboje.
+			// Ce grupa meji samo na crne potem tockam crnega pristejemo velikost te grupe (toliko obmocja crni omejuje),
+			// ce pa meji samo na bele figure potem pa pristejemo belim. V primeru, da grupa meji na bele in crne figure to pomeni
+			// da je to obmocje nevtralo in ne pripada nobeni grupi.
+			for(Grupa grupa : nezasedeneGrupe) {
+				boolean mejiNaCrno = false;
+				boolean mejiNaBelo = false;
+				for(Tocka tocka : grupa.sosednjeTocke) {
+					if(vseCrneTocke.contains(tocka)) {
+						mejiNaCrno = true;
+					}
+					else if(vseBeleTocke.contains(tocka)){
+						mejiNaBelo = true;
+					}
+				}
+				if(mejiNaCrno && !mejiNaBelo) {
+					tockeCrnega += grupa.povezaneTocke.size();
+				}
+				else if(mejiNaBelo && !mejiNaCrno) {
+					tockeBelega += grupa.povezaneTocke.size();
+				}
+			}
+			
 			System.out.println("Tocke crnega: " + tockeCrnega);
 			System.out.println("Tocke belega: " + tockeBelega);
 			
@@ -220,6 +220,7 @@ public class Igra {
 		return Stanje.V_TEKU;
 	}
 	
+	// Funkcija ki vrne list vseh grup belega, ki so popolnoma obkoljene s strani crnega
 	private List<Grupa> ObkoljenaGrupaBELA() {
 		List<Grupa> obkoljeneBeleGrupe = new ArrayList<Grupa>();
 		for(Grupa belaGrupa : grupeBelega) {
@@ -229,7 +230,7 @@ public class Igra {
 		}
 		return obkoljeneBeleGrupe;
 	}
-	
+	// Funkcija ki vrne list vseh grup crnega, ki so popolnoma obkoljene s strani belega	
 	private List<Grupa> ObkoljenaGrupaCRNA() {
 		List<Grupa> obkoljeneCrneGrupe = new ArrayList<Grupa>();
 		for(Grupa crnaGrupa : grupeCrnega) {
@@ -238,10 +239,6 @@ public class Igra {
 			}
 		}
 		return obkoljeneCrneGrupe;
-	}
-	
-	public void predajPotezo() {
-		
 	}
 	
 	public boolean odigraj(Poteza poteza) {
@@ -290,9 +287,6 @@ public class Igra {
 					if(grupeZaZdruzit.size() > 1) {
 						ZdruziStikajoceCrneGrupe(grupeZaZdruzit);
 					}
-					else { // grupeZaZdruzit.size() == 1
-						
-					}
 				}
 				PosodobiObkoljenostNasprotnihGrup(izbranaTocka, Igralec.BELI);
 				
@@ -334,9 +328,6 @@ public class Igra {
 				else {
 					if(grupeZaZdruzit.size() > 1) {
 						ZdruziStikajoceBeleGrupe(grupeZaZdruzit);
-					}
-					else {
-						
 					}
 				}
 				PosodobiObkoljenostNasprotnihGrup(izbranaTocka, Igralec.CRNI);
@@ -415,6 +406,8 @@ public class Igra {
 		}
 	}
 	
+	// Funkcija, ki posodobi mnozice sosednjih tock za vse grupe nekega igralca. To je vcasih potrebno ce kateri igralec "poje" katero 
+	// obmocje od drugega
 	private void PosodobiObkoljenostSvojihGrup(Igralec igralec) {
 		if(igralec == Igralec.BELI) {
 			Set<Grupa> noveGrupeBelega = new HashSet<Grupa>();
