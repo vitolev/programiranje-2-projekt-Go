@@ -205,8 +205,8 @@ public class Igra {
 				}
 			}
 			
-			System.out.println("Tocke crnega: " + tockeCrnega);
-			System.out.println("Tocke belega: " + tockeBelega);
+			//System.out.println("Tocke crnega: " + tockeCrnega);
+			//System.out.println("Tocke belega: " + tockeBelega);
 			
 			if(tockeCrnega > tockeBelega) {
 				return Stanje.ZMAGA_CRNI;

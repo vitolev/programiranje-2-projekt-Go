@@ -27,13 +27,17 @@ public class Inteligenca extends splosno.KdoIgra {
     }
     
     public Poteza izberiPotezo(Igra igra) {
-    	OcenjenaPoteza najboljsaPoteza =
+    	Poteza najboljsaPoteza = //Tukaj sem spremenil OcenjenaPoteza v Poteza
         		// minimax(igra, this.globina, igra.naPotezi());
-        		prvaIteracijaAlphaBeta(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
+        		//prvaIteracijaAlphaBeta(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
+    			MonteCarlo.monteCarlo(igra, igra.naPotezi(), 5000);
         		//alphabetaMultithread(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
     	prvaPonovitev = true;
-        return najboljsaPoteza.poteza;	
+        return najboljsaPoteza;	
     }
+    
+    
+    
     public OcenjenaPoteza prvaIteracijaAlphaBeta(Igra igra, int globina, int alpha, int beta, Igralec jaz) {
 		startTime = System.nanoTime();
 		int ocena;
