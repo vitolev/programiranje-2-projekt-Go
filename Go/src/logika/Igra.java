@@ -11,7 +11,7 @@ import splosno.Poteza;
 public class Igra {
 
 	// Velikost igralne pološče je N x N.
-	public static final int N = 9;
+	public static int N = 9;
 	
 	// Igralec, ki je trenutno na potezi.
 	// Vrednost je poljubna, če je igre konec (se pravi, lahko je napačna).

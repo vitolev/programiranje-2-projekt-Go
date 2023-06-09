@@ -32,7 +32,7 @@ public class IgralnoPolje extends JPanel implements MouseListener, KeyListener {
 
 	@Override
 	public Dimension getPreferredSize() {
-		return new Dimension(600, 600);
+		return new Dimension(700, 700);
 	}
 
 	
