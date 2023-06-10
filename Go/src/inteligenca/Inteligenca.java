@@ -30,7 +30,7 @@ public class Inteligenca extends splosno.KdoIgra {
     	Poteza najboljsaPoteza = //Tukaj sem spremenil OcenjenaPoteza v Poteza
         		// minimax(igra, this.globina, igra.naPotezi());
         		//prvaIteracijaAlphaBeta(igra, globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
-    			MonteCarlo.monteCarlo(igra, igra.naPotezi(), 5000);
+    			MonteCarlo.monteCarlo(igra, igra.naPotezi(), 500);
         		//alphabetaMultithread(igra, this.globina, Integer.MIN_VALUE, Integer.MAX_VALUE, igra.naPotezi());
     	prvaPonovitev = true;
         return najboljsaPoteza;	
