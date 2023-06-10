@@ -34,12 +34,9 @@ public class Vodja {
 	
 	private static long startTime = 0;
 	private static long endTime = 0;
-	
-	private static Set<Igra> preteklaStanja;
 		
 	public static void igramoNovoIgro () { 
 		igra = new Igra ();
-		preteklaStanja = new HashSet<Igra>();
 		//inteligenca = new Inteligenca();	// Ustvarimo novo instanco razreda Inteligenca
 		igramo ();
 	}
@@ -107,12 +104,10 @@ public class Vodja {
 		if (kopijaIgre.odigraj(poteza)) {
 			// Ker obstaja pravilo, da se situacija (stanje) na plosci ne sme ponoviti belezimo vsa pretekla stanja in
 			// preverimo da se slucajno ta situacija ni ze ponovila
-			if(!preteklaStanja.contains(kopijaIgre) || (poteza.x() == -1 && poteza.y() == -1)) {
-				preteklaStanja.add(kopijaIgre);
-				clovekNaVrsti = false;
-				igra.odigraj(poteza);
-				igramo ();
-			}
+			
+			clovekNaVrsti = false;
+			igra.odigraj(poteza);
+			igramo ();
 		}
 	}
 	

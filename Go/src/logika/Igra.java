@@ -33,6 +33,12 @@ public class Igra {
 	private boolean crniPredalPotezo;
 	private boolean beliPredalPotezo;
 	
+	private Set<Tocka> vsePrejsneBeleTocke = null;
+	private Set<Tocka> vsePrejsneCrneTocke = null;
+	
+	private Set<Tocka> vsePredPrejsneBeleTocke = null;
+	private Set<Tocka> vsePredPrejsneCrneTocke = null;
+	
 	
 	// Return naPotezi
 	public Igralec naPotezi () {
@@ -63,6 +69,12 @@ public class Igra {
 		beliPredalPotezo = false;
 		
 		naPotezi = Igralec.CRNI;	// Po pravilih začne črni igralec.
+		
+		vsePrejsneBeleTocke = new HashSet<Tocka>();
+		vsePrejsneCrneTocke = new HashSet<Tocka>();
+		
+		vsePredPrejsneBeleTocke = new HashSet<Tocka>();
+		vsePredPrejsneCrneTocke = new HashSet<Tocka>();
 	}
 	
 	// Konstruktor za kopijo dane igre
@@ -93,7 +105,13 @@ public class Igra {
 
 		for(Grupa grupa : igra.grupeCrnega) {
 			grupeCrnega.add(new Grupa(grupa));
-		}		
+		}	
+		
+		vsePrejsneBeleTocke = new HashSet<Tocka>(igra.vsePrejsneBeleTocke);
+		vsePrejsneCrneTocke = new HashSet<Tocka>(igra.vsePrejsneCrneTocke);
+		
+		vsePredPrejsneBeleTocke = new HashSet<Tocka>(igra.vsePredPrejsneBeleTocke);
+		vsePredPrejsneCrneTocke = new HashSet<Tocka>(igra.vsePredPrejsneCrneTocke);
 	}
 	
 	// tukaj vrne seznam vseh stolpcev in vrstic
@@ -354,6 +372,20 @@ public class Igra {
 			}
 			naPotezi = naPotezi.nasprotnik();
 			
+
+			// Preverimo če je stanje igre po odigrani potezi enako stanju igre iz predprejšne poteze.
+			// Če je vrnemo false, ker se pretekla stanja ne smejo ponavljat. Če ni potem vrnemo true
+			// in nastavimo predprejsno stanje na prejsno in prejsno stanje na zdajšno stanje igre 
+			if(vseCrneTocke.containsAll(vsePredPrejsneCrneTocke) && vseBeleTocke.containsAll(vsePredPrejsneBeleTocke) &&
+					vsePredPrejsneCrneTocke.containsAll(vseCrneTocke) && vsePredPrejsneBeleTocke.containsAll(vseBeleTocke)) {
+				return false;
+			}
+			
+			vsePredPrejsneCrneTocke = new HashSet<Tocka>(vsePrejsneCrneTocke);
+			vsePredPrejsneBeleTocke = new HashSet<Tocka>(vsePrejsneBeleTocke);
+			vsePrejsneCrneTocke = new HashSet<Tocka>(vseCrneTocke);
+			vsePrejsneBeleTocke = new HashSet<Tocka>(vseBeleTocke);
+
 			return true;
 		}
 		else {
@@ -429,12 +461,10 @@ public class Igra {
 	
 	@Override
     public boolean equals(Object o) {
- 
         // If the object is compared with itself then return true 
         if (o == this) {
             return true;
         }
- 
         /* Check if o is an instance of Igra or not
           "null instanceof [type]" also returns false */
         if (!(o instanceof Igra)) {
@@ -443,15 +473,28 @@ public class Igra {
          
         // typecast o to Tocka so that we can compare data members
         Igra igra = (Igra) o;
-         
         // Compare the data members and return accordingly
-        return vseCrneTocke.containsAll(igra.vseCrneTocke) && vseBeleTocke.containsAll(igra.vseBeleTocke);
+        return vseCrneTocke.containsAll(igra.vseCrneTocke) && vseBeleTocke.containsAll(igra.vseBeleTocke) &&
+        	   igra.vseCrneTocke.containsAll(vseCrneTocke) && igra.vseBeleTocke.containsAll(vseBeleTocke);
     }
 	
 	@Override
     public int hashCode() {
         return Objects.hash(vseBeleTocke, vseCrneTocke);
     }
+	
+	@Override
+	public String toString() {
+		System.out.print("Crne: ");
+		for(Tocka tocka : vseCrneTocke) {
+			System.out.print(tocka);
+		}System.out.print("\n");
+		System.out.print("Bele: ");
+		for(Tocka tocka : vseBeleTocke) {
+			System.out.print(tocka);
+		}
+		return "";
+	}
 }
 
 

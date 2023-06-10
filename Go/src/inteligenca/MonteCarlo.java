@@ -222,30 +222,30 @@ public class MonteCarlo {
 package inteligenca;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import logika.Igra;
 import logika.Igralec;
 import logika.Stanje;
 import splosno.Poteza;
+import vodja.Vodja;
 
 public class MonteCarlo {
     private static final int SIMULACIJSKI_STEVEC = 500;
     // Stevilo ponovitev, ko expendam, če je premalo, se preveč random stvari raziskujejo in se vrnejo na točko, ko bi jo lahko rej reši z večimi reS
     private static final double C_PARAMETER = 1.4;
     // C parameter iz enačbe iz predavanj, kako rad bi expandal, poskušam lahko potem z več/manj, če je repov manj potem naj bi ta tudi bila manj
-
-
     
-    public static Poteza monteCarlo(Igra igra, Igralec jaz, long timeLimit) { // Osnvna funkcija, ki vrne željeno potezo v določenem času
-        long startTime = System.currentTimeMillis();
+    public static Poteza monteCarlo(Igra igra, Igralec jaz, long timeLimit) { // Osnovna funkcija, ki vrne željeno potezo v določenem času
+    	long startTime = System.currentTimeMillis();
         long endTime = startTime + timeLimit;
-        
-        MonteCarloTreeNode root = new MonteCarloTreeNode(igra);		  		  // Ustvarimo novo drevo, ki nima starša (parent), torej je osnovni node.
 
+        MonteCarloTreeNode root = new MonteCarloTreeNode(igra);		  		  // Ustvarimo novo drevo, ki nima starša (parent), torej je osnovni node.
+        
         while (System.currentTimeMillis() < endTime) {
             MonteCarloTreeNode selectedNode = selectNode(root);				  // Kličemo select node, ki pogleda, s formulo išče 
             expandNode(selectedNode);
@@ -291,8 +291,12 @@ public class MonteCarlo {
         List<Poteza> moves = node.getIgra().poteze();
         for (Poteza move : moves) {
             Igra clonedIgra = new Igra(node.getIgra());
-            if (clonedIgra.odigraj(move)) {
-                MonteCarloTreeNode childNode = new MonteCarloTreeNode(clonedIgra);
+            if (clonedIgra.odigraj(move)) { 
+            	// Funkcija odigraj ne preveri ce se je stanje v igri slucajno ze ponovilo, zato moramo tukaj rocno 
+            	// preveriti da se taksno stanje ne ponovi. Ampak se ne vem trenutno kako
+            	
+                MonteCarloTreeNode childNode = new MonteCarloTreeNode(clonedIgra, node); // Tule mislim da mora bit dodan argument za
+                																		 // parent node, da potem backpropagation sploh dela
                 node.getChildren().put(move, childNode);
             }
         }
@@ -302,6 +306,37 @@ public class MonteCarlo {
     
     //____________________________________________________________________________________________________________
 
+    private static int simulirajIgro(Igra igraOsnovna) {
+    	if(igraOsnovna.stanje() == Stanje.V_TEKU) {
+    		Random random = new Random();
+            
+            List<Poteza> moves = igraOsnovna.poteze();
+            List<Poteza> dovoljenePoteze = new ArrayList<Poteza>();
+            for (Poteza move : moves) {
+            	Igra igra = new Igra(igraOsnovna);
+                if (igra.odigraj(move)) { 
+                	dovoljenePoteze.add(move);
+                }
+            }
+            dovoljenePoteze.add(new Poteza(-1,-1));
+            
+            int randomIndex = random.nextInt(dovoljenePoteze.size());
+        	Poteza randomMove = dovoljenePoteze.remove(randomIndex);
+        	
+        	Igra igra = new Igra(igraOsnovna);
+        	igra.odigraj(randomMove);
+        	return simulirajIgro(igra);
+    	}
+        
+    	else if (igraOsnovna.stanje() == Stanje.ZMAGA_BELI) {
+        	return (igraOsnovna.naPotezi() == Igralec.BELI ? 1 : 0);
+        }
+        else {
+        	return (igraOsnovna.naPotezi() == Igralec.CRNI ? 1 : 0);
+        }
+    }
+    
+    /*		Mislim da ta simulirajIgro() funkcija ni glih OK, zato sem napisal svojo. Predlagam da se to enkrat pregledama skup
     private static int simulirajIgro(Igra igraOsnovna) {
     	Igra igra = new Igra(igraOsnovna);
         Random random = new Random();
@@ -329,6 +364,7 @@ public class MonteCarlo {
         	return (igraOsnovna.naPotezi() == Igralec.CRNI ? 1 : 0);
         }
     }
+    */
     
     //____________________________________________________________________________________________________________
     private static int simulatePlayout(MonteCarloTreeNode node) {
@@ -361,9 +397,9 @@ public class MonteCarlo {
 
     //____________________________________________________________________________________________________________
 
-    
     private static void backpropagate(MonteCarloTreeNode node, int result) {
         MonteCarloTreeNode currentNode = node;
+
         while (currentNode != null) {
             currentNode.incrementPlays();
             if (result == 1) {

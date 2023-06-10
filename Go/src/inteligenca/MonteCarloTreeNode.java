@@ -1,14 +1,11 @@
 package inteligenca;
 
-import logika.Igra;
-import logika.Igralec;
-
-import splosno.Poteza;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import logika.Igra;
+import splosno.Poteza;
 
 class MonteCarloTreeNode {
 	//
@@ -19,8 +16,7 @@ class MonteCarloTreeNode {
     private Map<Poteza, MonteCarloTreeNode> children;
     private boolean expanded;
     private boolean koeficientZmage; // Ker vemo, da se alternirajoče odločamo, ali je v enačbi štejemo več x ali 1-x pri zmagah, nam to pomaga pri razreševanju problema
-    
-    
+
     private static final int SIMULACIJSKI_STEVEC = 500;
     // Stevilo ponovitev, ko expendam, če je premalo, se preveč random stvari raziskujejo in se vrnejo na točko, ko bi jo lahko rej reši z večimi reS
     private static final double C_PARAMETER = 1.4;
@@ -34,7 +30,7 @@ class MonteCarloTreeNode {
         this.parent = parent;
         this.children = new HashMap<>();
         this.expanded = false;
-        this.koeficientZmage = true;
+        this.koeficientZmage = !parent.koeficientZmage;
     } 
     
     // Nekaj osnovnih funkcij za dostopanje in updateanje
@@ -46,7 +42,7 @@ class MonteCarloTreeNode {
         this.parent = null;
         this.children = new HashMap<>();
         this.expanded = false;
-        this.koeficientZmage = !parent.koeficientZmage;
+        this.koeficientZmage = true;
 	}
 
 	public void setExpanded(boolean expanded) {
