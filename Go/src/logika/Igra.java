@@ -79,16 +79,18 @@ public class Igra {
 	
 	// Konstruktor za kopijo dane igre
 	public Igra(Igra igra) {
+		moznePoteze = new ArrayList<Poteza>();
 		this.plosca = new Polje[N][N]; 
 		for(int i = 0; i < N; i++) { 
 			for(int j = 0; j < N; j++) { 
 				this.plosca[i][j] = igra.plosca[i][j]; 
+				if(plosca[i][j] == Polje.PRAZNO) {
+					moznePoteze.add(new Poteza(i,j));
+				}
 			} 
-		}
-		this.moznePoteze = (ArrayList<Poteza>) igra.moznePoteze.clone(); 
-		//this.moznePoteze = new ArrayList<Poteza>(igra.moznePoteze); // According to stackoverflow bi to moralo narediti kopijo lista,
-																	// ampak nisem ziher. Če kaj ne bo delalo preveri to. 
-		this.naPotezi = igra.naPotezi;
+		} 
+		
+		naPotezi = igra.naPotezi;
 		
 		grupeBelega = new HashSet<Grupa>(); // Ustvarimo prazni mnozici grup za oba igralca.
 		grupeCrnega = new HashSet<Grupa>(); //
@@ -314,9 +316,9 @@ public class Igra {
 					// Crni igralec je s to potezo obkolil neko belo grupo. Odstrani to belo grupo
 					for(Grupa grupa : obkoljeneBeleGrupe) {
 						for(Tocka tocka : grupa.povezaneTocke) {
-							vseBeleTocke.remove(tocka);
-							plosca[tocka.x()][tocka.y()] = Polje.PRAZNO;
+							plosca[tocka.x()][tocka.y()] = Polje.PRAZNO; // Nastavimo polje na plosci nazaj na prazno
 						}
+						vseBeleTocke.removeAll(grupa.povezaneTocke);
 						grupeBelega.remove(grupa);
 					}
 					
@@ -356,9 +358,9 @@ public class Igra {
 					// Crni igralec je s to potezo obkolil neko belo grupo. Odstrani to belo grupo
 					for(Grupa grupa : obkoljeneCrneGrupe) {
 						for(Tocka tocka : grupa.povezaneTocke) {
-							vseCrneTocke.remove(tocka);
-							plosca[tocka.x()][tocka.y()] = Polje.PRAZNO;
+							plosca[tocka.x()][tocka.y()] = Polje.PRAZNO; // Nastavimo polje na plosci nazaj na prazno
 						}
+						vseCrneTocke.removeAll(grupa.povezaneTocke);
 						grupeCrnega.remove(grupa);
 					}
 					
@@ -385,7 +387,7 @@ public class Igra {
 			vsePredPrejsneBeleTocke = new HashSet<Tocka>(vsePrejsneBeleTocke);
 			vsePrejsneCrneTocke = new HashSet<Tocka>(vseCrneTocke);
 			vsePrejsneBeleTocke = new HashSet<Tocka>(vseBeleTocke);
-
+			
 			return true;
 		}
 		else {
@@ -456,6 +458,20 @@ public class Igra {
 			}
 			grupeCrnega.clear();
 			grupeCrnega = noveGrupeCrnega;
+		}
+		
+		PosodobiMnozicoMoznihPotez();
+	}
+	
+	// Ko smo odstranili nekaj grup ker smo jih obkolili se moramo posodobiti mnozico moznih potez, saj se je sedaj le-ta povecala
+	private void PosodobiMnozicoMoznihPotez() {
+		moznePoteze = new ArrayList<Poteza>();
+		for (int i = 0; i < N; i++) {
+			for (int j = 0; j < N; j++) {
+				if(plosca[i][j] == Polje.PRAZNO) {
+					moznePoteze.add(new Poteza(i,j));
+				}
+			}
 		}
 	}
 	

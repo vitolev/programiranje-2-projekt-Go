@@ -151,6 +151,7 @@ public class GlavnoOkno extends JFrame implements ActionListener{
 			
 			polje.repaint();
 		}
+		polje.requestFocusInWindow();
 	}
 
 	public void osveziGUI() {

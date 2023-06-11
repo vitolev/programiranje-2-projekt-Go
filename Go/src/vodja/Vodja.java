@@ -102,9 +102,6 @@ public class Vodja {
 	public static void igrajClovekovoPotezo(Poteza poteza) {
 		Igra kopijaIgre = new Igra(igra);
 		if (kopijaIgre.odigraj(poteza)) {
-			// Ker obstaja pravilo, da se situacija (stanje) na plosci ne sme ponoviti belezimo vsa pretekla stanja in
-			// preverimo da se slucajno ta situacija ni ze ponovila
-			
 			clovekNaVrsti = false;
 			igra.odigraj(poteza);
 			igramo ();

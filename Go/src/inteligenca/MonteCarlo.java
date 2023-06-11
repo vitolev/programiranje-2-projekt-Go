@@ -240,12 +240,12 @@ public class MonteCarlo {
     private static final double C_PARAMETER = 1.4;
     // C parameter iz enačbe iz predavanj, kako rad bi expandal, poskušam lahko potem z več/manj, če je repov manj potem naj bi ta tudi bila manj
     
+    private static Random random = new Random(); // Objekt za random stevila
+    
     public static Poteza monteCarlo(Igra igra, Igralec jaz, long timeLimit) { // Osnovna funkcija, ki vrne željeno potezo v določenem času
     	long startTime = System.currentTimeMillis();
         long endTime = startTime + timeLimit;
-
         MonteCarloTreeNode root = new MonteCarloTreeNode(igra);		  		  // Ustvarimo novo drevo, ki nima starša (parent), torej je osnovni node.
-        
         while (System.currentTimeMillis() < endTime) {
             MonteCarloTreeNode selectedNode = selectNode(root);				  // Kličemo select node, ki pogleda, s formulo išče 
             expandNode(selectedNode);
@@ -253,6 +253,7 @@ public class MonteCarlo {
             if (!selectedNode.getChildren().isEmpty()) {
                 nodeToExplore = selectBestChild(selectedNode);
             }
+            
             int simulationResult = simulirajIgro(nodeToExplore.getIgra());
             backpropagate(nodeToExplore, simulationResult);
         }
@@ -300,32 +301,32 @@ public class MonteCarlo {
                 node.getChildren().put(move, childNode);
             }
         }
+        
+        
+        Poteza pass = new Poteza(-1,-1);
+        Igra clonedIgra = new Igra(node.getIgra());
+        clonedIgra.odigraj(pass);
+        MonteCarloTreeNode childNode = new MonteCarloTreeNode(clonedIgra, node); 
+        node.getChildren().put(pass, childNode);
 
         node.setExpanded(true);
     }
     
     //____________________________________________________________________________________________________________
-
     private static int simulirajIgro(Igra igraOsnovna) {
     	if(igraOsnovna.stanje() == Stanje.V_TEKU) {
-    		Random random = new Random();
-            
-            List<Poteza> moves = igraOsnovna.poteze();
-            List<Poteza> dovoljenePoteze = new ArrayList<Poteza>();
-            for (Poteza move : moves) {
-            	Igra igra = new Igra(igraOsnovna);
-                if (igra.odigraj(move)) { 
-                	dovoljenePoteze.add(move);
-                }
-            }
+            List<Poteza> dovoljenePoteze = new ArrayList<Poteza>(igraOsnovna.poteze());
             dovoljenePoteze.add(new Poteza(-1,-1));
-            
-            int randomIndex = random.nextInt(dovoljenePoteze.size());
-        	Poteza randomMove = dovoljenePoteze.remove(randomIndex);
-        	
-        	Igra igra = new Igra(igraOsnovna);
-        	igra.odigraj(randomMove);
-        	return simulirajIgro(igra);
+            while(true) {
+            	int randomIndex = random.nextInt(dovoljenePoteze.size());
+            	Poteza randomMove = dovoljenePoteze.remove(randomIndex);
+            	
+            	Igra igra = new Igra(igraOsnovna);
+
+            	if(igra.odigraj(randomMove)) {
+            		return simulirajIgro(igra);
+            	}
+            }
     	}
         
     	else if (igraOsnovna.stanje() == Stanje.ZMAGA_BELI) {
