@@ -227,6 +227,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import logika.Igra;
 import logika.Igralec;
@@ -245,8 +248,12 @@ public class MonteCarlo {
     public static Poteza monteCarlo(Igra igra, Igralec jaz, long timeLimit) { // Osnovna funkcija, ki vrne željeno potezo v določenem času
     	long startTime = System.currentTimeMillis();
         long endTime = startTime + timeLimit;
+        
+        int numCores = Runtime.getRuntime().availableProcessors();
+        
         MonteCarloTreeNode root = new MonteCarloTreeNode(igra);		  		  // Ustvarimo novo drevo, ki nima starša (parent), torej je osnovni node.
         while (System.currentTimeMillis() < endTime) {
+        	ThreadPoolExecutor executor = new ThreadPoolExecutor(numCores, numCores, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
             MonteCarloTreeNode selectedNode = selectNode(root);				  // Kličemo select node, ki pogleda, s formulo išče 
             expandNode(selectedNode);
             MonteCarloTreeNode nodeToExplore = selectedNode;
@@ -254,10 +261,22 @@ public class MonteCarlo {
                 nodeToExplore = selectBestChild(selectedNode);
             }
             
-            int simulationResult = simulirajIgro(nodeToExplore.getIgra());
-            backpropagate(nodeToExplore, simulationResult);
+            MonteCarloWorker.simulationResult = 0;
+            MonteCarloWorker.numRuns = 0;
+            // ustvarimo toliko threadov kolikor je procesorjev na voljo
+            for(int i = 0; i < numCores; i++) {
+            	MonteCarloWorker worker = new MonteCarloWorker(nodeToExplore);
+            	executor.execute(worker);
+            }
+            executor.shutdown();
+            // pocakamo, da se vsi threadi dokoncajo
+    	    try {
+    	        executor.awaitTermination(5000, TimeUnit.MILLISECONDS);
+    	        backpropagate(nodeToExplore, MonteCarloWorker.simulationResult, MonteCarloWorker.numRuns);
+    	    } catch (InterruptedException e) {
+    	        // Handle the exception appropriately
+    	    }
         }
-
         return selectBestMove(root, jaz);
     }
     
@@ -313,7 +332,7 @@ public class MonteCarlo {
     }
     
     //____________________________________________________________________________________________________________
-    private static int simulirajIgro(Igra igraOsnovna) {
+    public static int simulirajIgro(Igra igraOsnovna) {
     	if(igraOsnovna.stanje() == Stanje.V_TEKU) {
             List<Poteza> dovoljenePoteze = new ArrayList<Poteza>(igraOsnovna.poteze());
             dovoljenePoteze.add(new Poteza(-1,-1));
@@ -398,14 +417,12 @@ public class MonteCarlo {
 
     //____________________________________________________________________________________________________________
 
-    private static void backpropagate(MonteCarloTreeNode node, int result) {
+    private static void backpropagate(MonteCarloTreeNode node, int result, int numRuns) {
         MonteCarloTreeNode currentNode = node;
 
         while (currentNode != null) {
-            currentNode.incrementPlays();
-            if (result == 1) {
-                currentNode.incrementWins();
-            }
+            currentNode.incrementPlays(numRuns);
+            currentNode.incrementWins(result);
             currentNode = currentNode.getParent();
         }
     }

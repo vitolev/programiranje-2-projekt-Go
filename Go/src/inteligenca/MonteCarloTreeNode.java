@@ -73,12 +73,12 @@ class MonteCarloTreeNode {
         return igra;
     }
 
-    public void incrementWins() {
-        wins++;
+    public void incrementWins(int wins) {
+        this.wins += wins;
     }
 
-    public void incrementPlays() {
-        plays++;
+    public void incrementPlays(int plays) {
+        this.plays += plays;
     }
     
     public boolean koeficientZmage() {
