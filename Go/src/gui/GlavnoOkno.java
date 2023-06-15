@@ -1,21 +1,30 @@
 package gui;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.List;
 
 import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.UIManager;
 
 import logika.Igra;
 import logika.Igralec;
@@ -34,6 +43,7 @@ public class GlavnoOkno extends JFrame implements ActionListener{
 	private JComboBox<String> igralec2;
 	private JComboBox<String> velikostPolja;
 	private JButton igrajmo;
+	private JButton navodila;
 	
 	/**
 	 * Ustvari novo glavno okno in prični igrati igro.
@@ -86,6 +96,12 @@ public class GlavnoOkno extends JFrame implements ActionListener{
 		igrajmo.setPreferredSize(new Dimension(80, 40));
 		menu_bar.add(igrajmo);
 		igrajmo.addActionListener(this);
+		
+		menu_bar.add(Box.createHorizontalGlue());
+		
+		navodila = new JButton("?");
+		menu_bar.add(navodila);
+		navodila.addActionListener(this);
 		
 		// igralno polje
 		polje = new IgralnoPolje();
@@ -140,8 +156,47 @@ public class GlavnoOkno extends JFrame implements ActionListener{
 			
 			Vodja.igramoNovoIgro();
 		}
-		
-		if(Vodja.igra == null) {
+		else if(e.getSource() == navodila) {
+			JFrame frame = new JFrame("Navodila za igranje");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            try 
+            {
+               UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception ex) {
+               ex.printStackTrace();
+            }
+            
+            List<String> read = new ArrayList<String>();
+            Path path = Paths.get("src/navodila.txt");
+			try {
+				read = Files.readAllLines(path);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+            
+            JPanel panel = new JPanel();
+            panel.setPreferredSize(new Dimension(650,400));
+            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+            panel.setOpaque(true);
+            JTextArea textArea = new JTextArea();
+            for(String vr : read) {
+            	textArea.append(vr);
+            	textArea.append("\n");
+            }
+            textArea.setBounds(0,0,650,400);
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(true);
+            textArea.setFont(new Font(Font.SERIF, Font.PLAIN, 16));
+            textArea.setEditable(false);
+            frame.add(textArea);
+            frame.getContentPane().add(BorderLayout.CENTER, panel);
+            frame.pack();
+            frame.setLocationByPlatform(true);
+            frame.setVisible(true);
+            frame.setResizable(false);
+		}
+		else if(Vodja.igra == null) {
 			String velikost = (String) velikostPolja.getSelectedItem();
 			switch(velikost) {
 			case "9x9": Igra.N = 9; break;

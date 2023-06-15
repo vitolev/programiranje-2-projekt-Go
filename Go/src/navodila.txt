@@ -1,0 +1,14 @@
+Pozdravljeni v igri GO.
+
+Tukaj so zbrana kratka navodila za uporabo aplikacije.
+Najprej pod menujema "Črni" in "Beli" izberite vrsto igralca in nato pritisnite gumb "Igrajmo".
+
+Ko ste na potezi (kdo je trenutno na potezi se sproti izpisuje pod igralnim oknom) s klikom miške kliknite na presečišče, kamor želite postaviti svojo figuro.
+Če želite predati svojo potezo, kliknite gumb "p" na svoji tipkovnici.
+
+Igra se konča, ko oba igralca zaporedoma predata svojo potezo. Takrat se na dnu igralnega okna izpiše kdo je zmagovalec.
+
+Pravila igre, ki so implementirana v tej aplikaciji so povzeta po pravilih opisanih na wikipediji (https://en.wikipedia.org/wiki/Rules_of_Go).
+Natančneje, igra se kitajska različica igre, kjer se končnega zmagovalca določi izključno s tem kdo ima več "ozemlja". 
+
+Veliko užitka ob igranju!
