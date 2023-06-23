@@ -15,6 +15,6 @@ public class MonteCarloWorker implements Runnable{
 	public void run() {
 		int simulationResult = MonteCarlo.simulirajIgro(node.getIgra());
 		numRuns++;
-		MonteCarloWorker.simulationResult += simulationResult;
+		MonteCarloWorker.simulationResult += simulationResult;		
 	}
 }

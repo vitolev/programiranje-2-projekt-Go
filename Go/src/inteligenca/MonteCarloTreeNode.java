@@ -16,12 +16,6 @@ class MonteCarloTreeNode {
     private Map<Poteza, MonteCarloTreeNode> children;
     private boolean expanded;
     private boolean koeficientZmage; // Ker vemo, da se alternirajoče odločamo, ali je v enačbi štejemo več x ali 1-x pri zmagah, nam to pomaga pri razreševanju problema
-
-    private static final int SIMULACIJSKI_STEVEC = 500;
-    // Stevilo ponovitev, ko expendam, če je premalo, se preveč random stvari raziskujejo in se vrnejo na točko, ko bi jo lahko rej reši z večimi reS
-    private static final double C_PARAMETER = 1.4;
-    // C parameter iz enačbe iz predavanj, kako rad bi expandal, poskušam lahko potem z več/manj, če je repov manj potem naj bi ta tudi bila manj
-    
    
     public MonteCarloTreeNode(Igra igra, MonteCarloTreeNode parent) {
         this.igra = igra;

@@ -1,3 +1,190 @@
+package inteligenca;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import logika.Igra;
+import logika.Igralec;
+import logika.Stanje;
+import splosno.Poteza;
+
+public class MonteCarlo {
+    private static final double C_PARAMETER = 1.4;
+    // C parameter iz enačbe iz predavanj, kako rad bi expandal, poskušam lahko potem z več/manj, če je repov manj potem naj bi ta tudi bila manj
+    
+    private static Random random = new Random(); // Objekt za random stevila
+    
+    public static Poteza monteCarlo(Igra igra, Igralec jaz, long timeLimit) { // Osnovna funkcija, ki vrne željeno potezo v določenem času
+    	long startTime = System.currentTimeMillis();
+        long endTime = startTime + timeLimit;
+        
+        int numCores = Runtime.getRuntime().availableProcessors();
+        
+        MonteCarloTreeNode root = new MonteCarloTreeNode(igra);		  		  // Ustvarimo novo drevo, ki nima starša (parent), torej je osnovni node.
+        while (System.currentTimeMillis() < endTime) {
+        	ThreadPoolExecutor executor = new ThreadPoolExecutor(numCores, numCores, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+            MonteCarloTreeNode selectedNode = selectNode(root);				  // Kličemo select node, ki pogleda, s formulo išče 
+            expandNode(selectedNode);
+            MonteCarloTreeNode nodeToExplore = selectedNode;
+            if (!selectedNode.getChildren().isEmpty()) {
+                nodeToExplore = selectBestChild(selectedNode);
+            }
+            
+            MonteCarloWorker.simulationResult = 0;
+            MonteCarloWorker.numRuns = 0;
+            // ustvarimo toliko threadov kolikor je procesorjev na voljo
+            for(int i = 0; i < numCores; i++) {
+            	MonteCarloWorker worker = new MonteCarloWorker(nodeToExplore);
+            	executor.execute(worker);
+            }
+            executor.shutdown();
+            // pocakamo, da se vsi threadi dokoncajo
+    	    try {
+    	        executor.awaitTermination(5000, TimeUnit.MILLISECONDS);
+    	        backpropagate(nodeToExplore, MonteCarloWorker.simulationResult, MonteCarloWorker.numRuns);
+    	    } catch (InterruptedException e) {
+    	        // Handle the exception appropriately
+    	    }
+        }
+        return selectBestMove(root, jaz);
+    }
+    
+    private static MonteCarloTreeNode selectNode(MonteCarloTreeNode rootNode) {
+        MonteCarloTreeNode node = rootNode;     // Tukaj se sprehajam z algoritmu po drevesu do najnižjega in najboljšega, ki ni raziskan.
+        while (!node.getChildren().isEmpty()) {
+            node = selectBestChild(node);
+        }
+        return node;
+    }
+    
+    private static MonteCarloTreeNode selectBestChild(MonteCarloTreeNode node) {
+        double maxUTC = -1;
+        MonteCarloTreeNode selectedChild = null;
+
+        for (MonteCarloTreeNode child : node.getChildren().values()) {
+            double utc = calculateUTC(child.getWins(), child.getPlays(), node.getPlays(), node.koeficientZmage());
+            if (utc > maxUTC) {
+                maxUTC = utc;
+                selectedChild = child;
+            }
+        }
+
+        return selectedChild;
+    }
+
+    private static void expandNode(MonteCarloTreeNode node) {
+        if (node.isExpanded() || node.getPlays() == 0) {
+            return;
+        }
+
+        List<Poteza> moves = node.getIgra().poteze();
+        for (Poteza move : moves) {
+            Igra clonedIgra = new Igra(node.getIgra());
+            if (clonedIgra.odigraj(move)) { 
+            	// Funkcija odigraj ne preveri ce se je stanje v igri slucajno ze ponovilo, zato moramo tukaj rocno 
+            	// preveriti da se taksno stanje ne ponovi. Ampak se ne vem trenutno kako
+            	
+                MonteCarloTreeNode childNode = new MonteCarloTreeNode(clonedIgra, node); // Tule mislim da mora bit dodan argument za
+                																		 // parent node, da potem backpropagation sploh dela
+                node.getChildren().put(move, childNode);
+            }
+        }
+        
+        
+        Poteza pass = new Poteza(-1,-1);
+        Igra clonedIgra = new Igra(node.getIgra());
+        clonedIgra.odigraj(pass);
+        MonteCarloTreeNode childNode = new MonteCarloTreeNode(clonedIgra, node); 
+        node.getChildren().put(pass, childNode);
+
+        node.setExpanded(true);
+    }
+    
+    public static int simulirajIgro(Igra igraOsnovna) {
+    	if(igraOsnovna.stanje() == Stanje.V_TEKU) {
+            List<Poteza> dovoljenePoteze = new ArrayList<Poteza>(igraOsnovna.poteze());
+            dovoljenePoteze.add(new Poteza(-1,-1));
+            int moveCounter = 0; // Števec potez za optimizacijo hitrosti (da koda ne dela nepotrebnih in neučinkovitih runnov)
+            
+            while(true) {
+            	if (moveCounter >= 100) {
+                    // Play pass for both players
+                    Igra igra = new Igra(igraOsnovna);
+                    igra.odigraj(new Poteza(-1, -1));
+                    igra.odigraj(new Poteza(-1, -1));
+                    return simulirajIgro(igra); // Da je loop vredu vseeno vrne igro, da potem evalueata igro do konca
+            	}
+            	
+            	int randomIndex = random.nextInt(dovoljenePoteze.size());
+            	Poteza randomMove = dovoljenePoteze.remove(randomIndex);
+            	
+            	Igra igra = new Igra(igraOsnovna);
+
+            	if(igra.odigraj(randomMove)) {
+            		return simulirajIgro(igra);
+            	}
+            }
+    	}
+    	else if (igraOsnovna.stanje() == Stanje.ZMAGA_BELI) {
+        	return (igraOsnovna.naPotezi() == Igralec.BELI ? 1 : 0);
+        }
+        else {
+        	return (igraOsnovna.naPotezi() == Igralec.CRNI ? 1 : 0);
+        }
+    }
+    
+    private static void backpropagate(MonteCarloTreeNode node, int result, int numRuns) {
+        MonteCarloTreeNode currentNode = node;
+
+        while (currentNode != null) {
+            currentNode.incrementPlays(numRuns);
+            currentNode.incrementWins(result);
+            currentNode = currentNode.getParent();
+        }
+    }
+
+    private static double calculateUTC(int wins, int plays, int parentPlays, boolean koeficientZmage) {
+        if (plays == 0) {
+            return Double.MAX_VALUE;
+        }
+        double winRate = (double) wins / plays;
+        if (!koeficientZmage) {
+        	winRate = 1 - winRate;
+        }
+        double explorationTerm = C_PARAMETER * Math.sqrt(Math.log(parentPlays) / plays);
+        return winRate + explorationTerm;
+    }
+
+    private static Poteza selectBestMove(MonteCarloTreeNode rootNode, Igralec jaz) {
+        double maxWinRate = -1;
+        Poteza bestMove = null;
+
+        for (Map.Entry<Poteza, MonteCarloTreeNode> entry : rootNode.getChildren().entrySet()) {
+            Poteza move = entry.getKey();
+            MonteCarloTreeNode childNode = entry.getValue();
+
+            double winRate = (double) childNode.getWins() / childNode.getPlays();
+            if (winRate > maxWinRate) {
+                maxWinRate = winRate;
+                bestMove = move;
+            }
+        }
+
+        return bestMove;
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+//-------------SPODAJ JE PRETEKLA VERZIJA KODE, OD KATERE SI NEKATERE DELE ŠE IZPOSOJAVA--------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 /*
 package inteligenca;
 
@@ -217,145 +404,83 @@ public class MonteCarlo {
 }
 */
 
-// Tukaj bom zdaj probal narediti še s tem, da naredim tree pa ga exploram.
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
-package inteligenca;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import logika.Igra;
-import logika.Igralec;
-import logika.Stanje;
-import splosno.Poteza;
-import vodja.Vodja;
-
-public class MonteCarlo {
-    private static final int SIMULACIJSKI_STEVEC = 500;
-    // Stevilo ponovitev, ko expendam, če je premalo, se preveč random stvari raziskujejo in se vrnejo na točko, ko bi jo lahko rej reši z večimi reS
-    private static final double C_PARAMETER = 1.4;
-    // C parameter iz enačbe iz predavanj, kako rad bi expandal, poskušam lahko potem z več/manj, če je repov manj potem naj bi ta tudi bila manj
-    
-    private static Random random = new Random(); // Objekt za random stevila
-    
-    public static Poteza monteCarlo(Igra igra, Igralec jaz, long timeLimit) { // Osnovna funkcija, ki vrne željeno potezo v določenem času
-    	long startTime = System.currentTimeMillis();
-        long endTime = startTime + timeLimit;
-        
-        int numCores = Runtime.getRuntime().availableProcessors();
-        
-        MonteCarloTreeNode root = new MonteCarloTreeNode(igra);		  		  // Ustvarimo novo drevo, ki nima starša (parent), torej je osnovni node.
-        while (System.currentTimeMillis() < endTime) {
-        	ThreadPoolExecutor executor = new ThreadPoolExecutor(numCores, numCores, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
-            MonteCarloTreeNode selectedNode = selectNode(root);				  // Kličemo select node, ki pogleda, s formulo išče 
-            expandNode(selectedNode);
-            MonteCarloTreeNode nodeToExplore = selectedNode;
-            if (!selectedNode.getChildren().isEmpty()) {
-                nodeToExplore = selectBestChild(selectedNode);
-            }
+    /*		
+    Mislim da ta simulirajIgro() funkcija ni glih OK, zato sem napisal svojo. Predlagam da se to enkrat pregledama skup
+    private static int simulirajIgro(Igra igraOsnovna) {
+    	Igra igra = new Igra(igraOsnovna);
+        Random random = new Random();
+        while (igra.stanje() == Stanje.V_TEKU) {
+            List<Poteza> moznePoteze = igra.poteze(); // Najprej tvorimo seznam vseh potez
+            List<Poteza> clonedMoznePoteze = new ArrayList<>(moznePoteze); // kloniramo osnovni seznam, da lahko mečemo ven poteze
+            Poteza randomMove = new Poteza(-1, -1); // V osnovi je poteza kar pass, potem jo takoj spremeni, če jo lahko
             
-            MonteCarloWorker.simulationResult = 0;
-            MonteCarloWorker.numRuns = 0;
-            // ustvarimo toliko threadov kolikor je procesorjev na voljo
-            for(int i = 0; i < numCores; i++) {
-            	MonteCarloWorker worker = new MonteCarloWorker(nodeToExplore);
-            	executor.execute(worker);
-            }
-            executor.shutdown();
-            // pocakamo, da se vsi threadi dokoncajo
-    	    try {
-    	        executor.awaitTermination(5000, TimeUnit.MILLISECONDS);
-    	        backpropagate(nodeToExplore, MonteCarloWorker.simulationResult, MonteCarloWorker.numRuns);
-    	    } catch (InterruptedException e) {
-    	        // Handle the exception appropriately
-    	    }
-        }
-        return selectBestMove(root, jaz);
-    }
-    
-    private static MonteCarloTreeNode selectNode(MonteCarloTreeNode rootNode) {
-        MonteCarloTreeNode node = rootNode;     // Tukaj se sprehajam z algoritmu po drevesu do najnižjega in najboljšega, ki ni raziskan.
-        while (!node.getChildren().isEmpty()) {
-            node = selectBestChild(node);
-        }
-        return node;
-    }
-    
-    private static MonteCarloTreeNode selectBestChild(MonteCarloTreeNode node) {
-        double maxUTC = -1;
-        MonteCarloTreeNode selectedChild = null;
+            do {
 
-        for (MonteCarloTreeNode child : node.getChildren().values()) {
-            double utc = calculateUTC(child.getWins(), child.getPlays(), node.getPlays(), node.koeficientZmage());
-            if (utc > maxUTC) {
-                maxUTC = utc;
-                selectedChild = child;
-            }
-        }
-
-        return selectedChild;
-    }
-
-    private static void expandNode(MonteCarloTreeNode node) {
-        if (node.isExpanded() || node.getPlays() == 0) {
-            return;
-        }
-
-        List<Poteza> moves = node.getIgra().poteze();
-        for (Poteza move : moves) {
-            Igra clonedIgra = new Igra(node.getIgra());
-            if (clonedIgra.odigraj(move)) { 
-            	// Funkcija odigraj ne preveri ce se je stanje v igri slucajno ze ponovilo, zato moramo tukaj rocno 
-            	// preveriti da se taksno stanje ne ponovi. Ampak se ne vem trenutno kako
-            	
-                MonteCarloTreeNode childNode = new MonteCarloTreeNode(clonedIgra, node); // Tule mislim da mora bit dodan argument za
-                																		 // parent node, da potem backpropagation sploh dela
-                node.getChildren().put(move, childNode);
-            }
-        }
-        
-        
-        Poteza pass = new Poteza(-1,-1);
-        Igra clonedIgra = new Igra(node.getIgra());
-        clonedIgra.odigraj(pass);
-        MonteCarloTreeNode childNode = new MonteCarloTreeNode(clonedIgra, node); 
-        node.getChildren().put(pass, childNode);
-
-        node.setExpanded(true);
-    }
-    
-    //____________________________________________________________________________________________________________
-    public static int simulirajIgro(Igra igraOsnovna) {
-    	if(igraOsnovna.stanje() == Stanje.V_TEKU) {
-            List<Poteza> dovoljenePoteze = new ArrayList<Poteza>(igraOsnovna.poteze());
-            dovoljenePoteze.add(new Poteza(-1,-1));
-            while(true) {
-            	int randomIndex = random.nextInt(dovoljenePoteze.size());
-            	Poteza randomMove = dovoljenePoteze.remove(randomIndex);
-            	
-            	Igra igra = new Igra(igraOsnovna);
-
-            	if(igra.odigraj(randomMove)) {
-            		return simulirajIgro(igra);
+            	if (clonedMoznePoteze.size() == 0) {
+            		randomMove = new Poteza(-1, -1); // Če ni več možnosti, vrni pass
             	}
-            }
-    	}
-        
-    	else if (igraOsnovna.stanje() == Stanje.ZMAGA_BELI) {
+            	else {
+                	int randomIndex = random.nextInt(clonedMoznePoteze.size());
+                	randomMove = clonedMoznePoteze.remove(randomIndex);
+            	}
+            } while(!igra.odigraj(randomMove));
+                        
+        }
+        if (igra.stanje() == Stanje.ZMAGA_BELI) {
         	return (igraOsnovna.naPotezi() == Igralec.BELI ? 1 : 0);
         }
         else {
         	return (igraOsnovna.naPotezi() == Igralec.CRNI ? 1 : 0);
         }
     }
+    */
     
+    //____________________________________________________________________________________________________________
+    /*
+    private static int simulatePlayout(MonteCarloTreeNode node) {
+        Random random = new Random();
+        Igra igra = new Igra(node.getIgra()); 		//Skopiramo igro
+        
+        while (igra.stanje() == Stanje.V_TEKU) {
+            List<Poteza> moves = igra.poteze();
+            if (moves.isEmpty()) {
+                break;
+            }
+            int randomIndex = random.nextInt(moves.size());
+            Poteza randomMove = moves.get(randomIndex);
+            igra.odigraj(randomMove);
+        }
+
+        return getSimulationResult(igra, node.getParent().getIgra());
+    }
+    
+    
+    private static int getSimulationResult(Igra igra, Igra parentIgra) {
+        Stanje stanje = igra.stanje();
+        if (stanje == Stanje.ZMAGA_BELI) {
+            return igra.naPotezi() == Igralec.BELI ? 1 : 0;
+        } else if (stanje == Stanje.ZMAGA_CRNI) {
+            return igra.naPotezi() == Igralec.CRNI ? 1 : 0;
+        }
+        // For draws or unfinished games, use the parent game as a tiebreaker
+        return getSimulationResult(parentIgra, null);
+    }
+    */
+
+    //____________________________________________________________________________________________________________
+
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
+
     /*		Mislim da ta simulirajIgro() funkcija ni glih OK, zato sem napisal svojo. Predlagam da se to enkrat pregledama skup
     private static int simulirajIgro(Igra igraOsnovna) {
     	Igra igra = new Igra(igraOsnovna);
@@ -387,9 +512,10 @@ public class MonteCarlo {
     */
     
     //____________________________________________________________________________________________________________
+    /*
     private static int simulatePlayout(MonteCarloTreeNode node) {
         Random random = new Random();
-        Igra igra = new Igra(node.getIgra()); 						// Skopiramo igro
+        Igra igra = new Igra(node.getIgra()); 		//Skopiramo igro
         
         while (igra.stanje() == Stanje.V_TEKU) {
             List<Poteza> moves = igra.poteze();
@@ -404,6 +530,7 @@ public class MonteCarlo {
         return getSimulationResult(igra, node.getParent().getIgra());
     }
     
+    
     private static int getSimulationResult(Igra igra, Igra parentIgra) {
         Stanje stanje = igra.stanje();
         if (stanje == Stanje.ZMAGA_BELI) {
@@ -414,52 +541,6 @@ public class MonteCarlo {
         // For draws or unfinished games, use the parent game as a tiebreaker
         return getSimulationResult(parentIgra, null);
     }
+    */
 
     //____________________________________________________________________________________________________________
-
-    private static void backpropagate(MonteCarloTreeNode node, int result, int numRuns) {
-        MonteCarloTreeNode currentNode = node;
-
-        while (currentNode != null) {
-            currentNode.incrementPlays(numRuns);
-            currentNode.incrementWins(result);
-            currentNode = currentNode.getParent();
-        }
-    }
-
-    private static double calculateUTC(int wins, int plays, int parentPlays, boolean koeficientZmage) {
-        if (plays == 0) {
-            return Double.MAX_VALUE;
-        }
-        double winRate = (double) wins / plays;
-        if (!koeficientZmage) {
-        	winRate = 1 - winRate;
-        }
-        double explorationTerm = C_PARAMETER * Math.sqrt(Math.log(parentPlays) / plays);
-        return winRate + explorationTerm;
-    }
-
-    private static Poteza selectBestMove(MonteCarloTreeNode rootNode, Igralec jaz) {
-        double maxWinRate = -1;
-        Poteza bestMove = null;
-
-        for (Map.Entry<Poteza, MonteCarloTreeNode> entry : rootNode.getChildren().entrySet()) {
-            Poteza move = entry.getKey();
-            MonteCarloTreeNode childNode = entry.getValue();
-
-            double winRate = (double) childNode.getWins() / childNode.getPlays();
-            if (winRate > maxWinRate) {
-                maxWinRate = winRate;
-                bestMove = move;
-            }
-        }
-
-        return bestMove;
-    }
-    
-    
-    
-}
-
-
-

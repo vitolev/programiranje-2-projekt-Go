@@ -13,7 +13,7 @@ public class Inteligenca extends splosno.KdoIgra {
 	private static final int ZMAGA = 100; // vrednost zmage, ta bodo kasneje še spremenjeni glede na metodo inteligence
 	private static final int ZGUBA = -ZMAGA;
 	
-    private int globina;
+    private int globina; //Za prejšnjo implementacijo
 
     private static long startTime;
     
